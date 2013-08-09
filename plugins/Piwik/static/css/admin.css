@@ -1,0 +1,11 @@
+.Piwik_settings_icon {
+    background: url(/plugins/Piwik/static/img/piwik-logo.png) left center no-repeat !important;
+}
+
+.Piwik_icon_visitors, .Piwik_icon_pages {
+    background: url(/plugins/Piwik/static/img/piwik-logo.png) left center no-repeat !important;
+}
+
+.Piwik_report_piwik_group {
+    background: url(/plugins/Piwik/static/img/piwik-logo.png) left center no-repeat !important;
+}
