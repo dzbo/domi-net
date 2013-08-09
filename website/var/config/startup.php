@@ -26,3 +26,9 @@ $routeCustom = new Zend_Controller_Router_Route(
 $router->addRoute('custom', $routeCustom);
 $front->setRouter($router);
 */
+
+include_once dirname(__FILE__) . '/../../lib/Website/Controller/Plugin/RootRedirect.php';
+
+// register plugin that redirects from root url to locale
+$front = Zend_Controller_Front::getInstance();
+$front->registerPlugin(new Website_Controller_Plugin_RootRedirect());
