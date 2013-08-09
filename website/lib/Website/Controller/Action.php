@@ -15,6 +15,10 @@ class Website_Controller_Action extends Pimcore_Controller_Action_Frontend {
 
     $this->view->language = $locale->getLanguage();
     $this->language = $locale->getLanguage();
+
+    //layout
+    $this->enableLayout();
+    $this->view->layout()->setLayout('site'); 
   }
 
 }
