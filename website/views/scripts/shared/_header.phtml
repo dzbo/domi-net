@@ -1,0 +1,23 @@
+<?php echo $this->doctype('HTML5')?>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <?php echo $this->headMeta()
+    ->appendName('keywords', $this->translate("keywords"))
+    ->appendName('description', $this->translate("description")) ?>
+
+  <?php echo $this->headTitle($this->document->title)
+    ->headTitle($this->translate("title"))->setSeparator(' - '); ?>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="shortcut icon" href="/<?php echo $this->baseUrl()?>website/public/favicon.ico" />
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/<?php echo $this->baseUrl()?>website/public/css/style.css" />
+  <link rel="stylesheet" type="text/css" href="/<?php echo $this->baseUrl()?>website/public/css/pimcore-overrides.css" />
+  <?php if ($this->editmode):?>
+  <link rel="stylesheet" type="text/css" href="/<?php echo $this->baseUrl()?>website/public/css/pimcore-editmode.css" />
+  <?php endif;?>
+</head>
+
+<body>
