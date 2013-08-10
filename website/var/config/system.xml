@@ -6,10 +6,11 @@
     <domain/>
     <redirect_to_maindomain/>
     <language>en</language>
-    <validLanguages>,pl_PL,de_DE</validLanguages>
+    <validLanguages>,pl,en,de</validLanguages>
     <fallbackLanguages>
-      <pl_PL/>
-      <de_DE/>
+      <pl/>
+      <en/>
+      <de/>
     </fallbackLanguages>
     <theme/>
     <contactemail>kontakt@domi-net.com.pl</contactemail>
