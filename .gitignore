@@ -1,4 +1,8 @@
+# system
 .DS_Store
+
+# pimcore
 website/var/log
 website/var/versions
+website/var/recyclebin
 
