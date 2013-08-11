@@ -5,4 +5,5 @@
 website/var/log
 website/var/versions
 website/var/recyclebin
+website/var/tmp
 
