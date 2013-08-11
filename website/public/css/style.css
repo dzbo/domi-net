@@ -1,0 +1,36 @@
+/* Global styles */
+
+body {
+  font-family: Arial, Helvetica, sans-serif; 
+  font-size: 12px;
+  color: #282828;
+  background: url(../img/bg.gif)
+}
+
+img {
+  border: 0;
+}
+
+/* Layout */
+.container {
+  margin: 0 auto;
+  position: relative;
+}
+
+footer {
+  text-align: center;
+  font-size: 12px;
+  color: #b5afaf;
+}
+
+/* parallax */
+#p1 {
+  background: url('../img/header_panorama.jpg') top center;
+  height: 300px;
+  background-size: 2880px 505px;
+  margin-top: 60px;
+  width: 100%;
+}
+
+/* Nav */
+

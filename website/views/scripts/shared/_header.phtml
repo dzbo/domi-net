@@ -18,8 +18,20 @@
   <?php if ($this->editmode):?>
   <link rel="stylesheet" type="text/css" href="/<?php echo $this->baseUrl()?>website/public/css/pimcore-editmode.css" />
   <?php endif;?>
+<link rel="stylesheet" type="text/css" href="/<?php echo $this->baseUrl()?>website/public/css/media-queries.css" />
 </head>
 
 <body>
 
-<header></header>
+<header>
+
+  <?php echo $this->render('shared/_parallax.phtml')?>
+
+  <div class="container">
+    <div class="row">
+
+    </div> 
+  </div> 
+</header>
+
+<div class="container">

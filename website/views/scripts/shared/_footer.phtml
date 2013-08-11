@@ -1,7 +1,14 @@
-  <footer></footer>
+<footer class="row">
+  <div class="col-lg-12">
+    &copy; <?php echo date('Y')?> <?php echo $this->translate('copyright') ?>
+  </div>
+</footer>
+</div>
 
-  <script src="http://code.jquery.com/jquery.js"></script>
-  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
-  <?php echo $this->headScript();?>
-	</body>
+<script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
+<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/<?php echo $this->baseUrl()?>website/public/js/custom.js"></script>
+
+<?php echo $this->headScript();?>
+</body>
 </html>
