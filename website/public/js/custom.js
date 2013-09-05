@@ -9,6 +9,6 @@ $(function() {
   }
 
   // contact map
-  load_map("<b>Domi-Net</b><br />ul.Kwiatkowskiego 7/38, Częstochowa, Poland", 50.822123, 19.099281);
+  load_map("<b>Domi-Net</b><br />ul.Kwiatkowskiego 7/38, Częstochowa, Poland", 50.82805, 19.10644);
 
 });
