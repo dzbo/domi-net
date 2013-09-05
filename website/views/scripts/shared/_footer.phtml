@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row margined">
       <div class="col-lg-4 text-left">
-        &copy; <?php echo date('Y')?> <?php echo $this->translate('copyright') ?>
+        &copy; <?php echo date('Y')?> <?php echo $this->input('copyright', array("width" => 200))?>
       </div>
       <div class="col-lg-8 text-right recommended">
         <?php echo $this->input('recommend', array("width" => 100))?>
