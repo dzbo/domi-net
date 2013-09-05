@@ -358,15 +358,58 @@ class Document_Tag_Href extends Document_Tag {
         }
     }
 
+    /**
+     * @param int $id
+     * @return Document_Tag_Href
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
 
     /**
-     * Rewrites id from source to target, $idMapping contains sourceId => targetId mapping
+     * @return int
+     */
+    public function getId()
+    {
+        return (int) $this->id;
+    }
+
+    /**
+     * @param string $subtype
+     * @return Document_Tag_Href
+     */
+    public function setSubtype($subtype)
+    {
+        $this->subtype = $subtype;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSubtype()
+    {
+        return $this->subtype;
+    }
+
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
      * @param array $idMapping
      * @return void
      */
     public function rewriteIds($idMapping) {
-        if($this->type == "document" and array_key_exists((int) $this->id, $idMapping)) {
-            $this->id = $idMapping[(int) $this->id];
+        if(array_key_exists($this->type, $idMapping) and array_key_exists($this->getId(), $idMapping[$this->type])) {
+            $this->id = $idMapping[$this->type][$this->getId()];
         }
     }
 

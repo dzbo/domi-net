@@ -61,7 +61,8 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
 
             $metaData = array(
                 "hotspots" => $data->getHotspots(),
-                "marker" => $data->getMarker()
+                "marker" => $data->getMarker(),
+                "crop" => $data->getCrop()
             );
 
             $rewritePath = function ($data) {
@@ -109,13 +110,18 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
             $metaData = $data[$this->getName() . "__hotspots"];
 
             // check if the data is JSON (backward compatibility)
-            $md = json_decode($metaData);
+            $md = json_decode($metaData, true);
             if(!$md) {
                 $md = Pimcore_Tool_Serialize::unserialize($metaData);
+            } else {
+                if(is_array($md) && count($md)) {
+                    $md["hotspots"] = $md;
+                }
             }
 
             $hotspots = empty($md["hotspots"]) ? null : $md["hotspots"];
             $marker = empty($md["marker"]) ? null : $md["marker"];
+            $crop = empty($md["crop"]) ? null : $md["crop"];
 
             $rewritePath = function ($data) {
 
@@ -139,7 +145,7 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
             $hotspots = $rewritePath($hotspots);
             $marker = $rewritePath($marker);
 
-            return new Object_Data_Hotspotimage($data[$this->getName() . "__image"], $hotspots, $marker);
+            return new Object_Data_Hotspotimage($data[$this->getName() . "__image"], $hotspots, $marker, $crop);
         }
         return null;
 
@@ -192,7 +198,8 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
             return array(
                 "image" => $imageId,
                 "hotspots" => $hotspots,
-                "marker" => $marker
+                "marker" => $marker,
+                "crop" => $data->getCrop()
             );
         }
         return null;
@@ -234,7 +241,7 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
         }
 
 
-        return new Object_Data_Hotspotimage($data["image"], $data["hotspots"], $data["marker"]);
+        return new Object_Data_Hotspotimage($data["image"], $data["hotspots"], $data["marker"], $data["crop"]);
     }
 
     /**
@@ -255,10 +262,9 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
      * @return string
      */
     public function getForCsvExport($object) {
-        $key = $this->getName();
-        $getter = "get".ucfirst($key);
-        if ($object->$getter() instanceof Object_Data_Hotspotimage) {
-            return base64_encode(Pimcore_Tool_Serialize::serialize($object->$getter()));
+        $data = $this->getDataFromObjectParam($object);
+        if ($data instanceof Object_Data_Hotspotimage) {
+            return base64_encode(Pimcore_Tool_Serialize::serialize($data));
         } else return null;
     }
 
@@ -397,5 +403,34 @@ class Object_Class_Data_Hotspotimage extends Object_Class_Data_Image {
         }
     }
 
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+        if($data instanceof Object_Data_Hotspotimage && $data->getImage()) {
+            $id = $data->getImage()->getId();
+            if(array_key_exists("asset", $idMapping) and array_key_exists($id, $idMapping["asset"])) {
+                $data->setImage(Asset::getById($idMapping["asset"][$id]));
 
+                // reset hotspot, marker & crop
+                $data->setHotspots(null);
+                $data->setMarker(null);
+                $data->setCrop(null);
+            }
+        }
+        return $data;
+    }
 }

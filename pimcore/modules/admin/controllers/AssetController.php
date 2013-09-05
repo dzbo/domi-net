@@ -427,9 +427,9 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
         }
 
         $this->_helper->json(array(
-              "hasDependencies" => $hasDependency,
-              "childs" => $childs,
-              "deletejobs" => $deleteJobs
+            "hasDependencies" => $hasDependency,
+            "childs" => $childs,
+            "deletejobs" => $deleteJobs
         ));
     }
 
@@ -610,11 +610,11 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
         } else if ($asset->isAllowed("rename") &&  $this->getParam("filename")  ) {
             //just rename
             try {
-                    $asset->setFilename($this->getParam("filename"));
-                    $asset->save();
-                    $success = true;
+                $asset->setFilename($this->getParam("filename"));
+                $asset->save();
+                $success = true;
             } catch (Exception $e) {
-                    $this->_helper->json(array("success" => false, "message" => $e->getMessage()));
+                $this->_helper->json(array("success" => false, "message" => $e->getMessage()));
             }
         } else {
             Logger::debug("prevented update asset because of missing permissions ");
@@ -802,7 +802,7 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
                 $thumbnail = $image->getThumbnailConfig($this->getAllParams());
             }
         }
-        
+
         $format = strtolower($thumbnail->getFormat());
         if ($format == "source" || $format == "print") {
             $thumbnail->setFormat("PNG");
@@ -848,7 +848,11 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
 
     public function getVideoThumbnailAction() {
 
-        $video = Asset::getById(intval($this->getParam("id")));
+        if($this->getParam("id")) {
+            $video = Asset::getById(intval($this->getParam("id")));
+        } else if ($this->getParam("path")) {
+            $video = Asset::getByPath($this->getParam("path"));
+        }
         $thumbnail = $video->getImageThumbnailConfig($this->getAllParams());
 
         $format = strtolower($thumbnail->getFormat());
@@ -945,20 +949,7 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
 
         $this->view->asset = $asset;
 
-        $config = new Asset_Video_Thumbnail_Config();
-        $config->setName("pimcore_video_preview_" . $asset->getId());
-        $config->setAudioBitrate(128);
-        $config->setVideoBitrate(700);
-
-        $config->setItems(array(
-            array(
-                "method" => "scaleByWidth",
-                "arguments" =>
-                    array(
-                        "width" => 500
-                    )
-            )
-        ));
+        $config = Asset_Video_Thumbnail_Config::getPreviewConfig();
 
         $thumbnail = $asset->getThumbnail($config, array("mp4"));
 
@@ -1419,8 +1410,6 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
     }
 
     public function importServerFilesAction() {
-
-
         $assetFolder = Asset::getById($this->getParam("parentId"));
         $serverPath = $this->getParam("serverPath");
         $files = explode("::", $this->getParam("files"));
@@ -1428,7 +1417,8 @@ class Admin_AssetController extends Pimcore_Controller_Action_Admin {
         foreach ($files as $file) {
             $absolutePath = $serverPath . $file;
             if(is_file($absolutePath)) {
-                $folder = Asset_Service::createFolderByPath($assetFolder->getFullPath() . dirname($file));
+                $relFolderPath = str_replace('\\', '/', dirname($file));
+                $folder = Asset_Service::createFolderByPath($assetFolder->getFullPath() . $relFolderPath);
                 $filename = basename($file);
 
                 // check for duplicate filename

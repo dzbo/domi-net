@@ -246,10 +246,9 @@ class Object_Class_Data_Link extends Object_Class_Data {
      * @return string
      */
     public function getForCsvExport($object) {
-        $key = $this->getName();
-        $getter = "get".ucfirst($key);
-        if ($object->$getter() instanceof Object_Data_Link) {
-            return base64_encode(Pimcore_Tool_Serialize::serialize($object->$getter()));
+        $data = $this->getDataFromObjectParam($object);
+        if ($data instanceof Object_Data_Link) {
+            return base64_encode(Pimcore_Tool_Serialize::serialize($data));
         } else return null;
     }
 
@@ -272,14 +271,13 @@ class Object_Class_Data_Link extends Object_Class_Data {
      * @return mixed
      */
     public function getForWebserviceExport($object) {
-        $k = $this->getName();
-        $getter = "get".ucfirst($k);
-        if ($object->$getter() instanceof Object_Data_Link) {
+        $data = $this->getDataFromObjectParam($object);
+        if ($data instanceof Object_Data_Link) {
 
-            $keys = get_object_vars($object->$getter());
+            $keys = get_object_vars($data);
             foreach ($keys as $key => $value) {
                 $method = "get" . ucfirst($key);
-                if (!method_exists($object->$getter(), $method) or $key=="object") {
+                if (!method_exists($data, $method) or $key=="object") {
                     unset($keys[$key]);
                 }
             }
@@ -367,5 +365,33 @@ class Object_Class_Data_Link extends Object_Class_Data {
                return $data->direct;
            }
         }
+    }
+
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+        if($data instanceof Object_Data_Link && $data->getLinktype() == "internal") {
+            $id = $data->getInternal();
+            $type = $data->getInternalType();
+
+            if(array_key_exists($type, $idMapping) and array_key_exists($id, $idMapping[$type])) {
+                $data->setInternal($idMapping[$type][$id]);
+            }
+        }
+        return $data;
     }
 }

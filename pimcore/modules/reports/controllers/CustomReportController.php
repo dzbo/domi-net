@@ -13,7 +13,7 @@
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
-class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
+class Reports_CustomReportController extends Pimcore_Controller_Action_Admin_Reports {
 
     public function init() {
         parent::init();
@@ -23,7 +23,7 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
 
     public function treeAction () {
 
-        $dir = Tool_SqlReport_Config::getWorkingDir();
+        $dir = Tool_CustomReport_Config::getWorkingDir();
 
         $reports = array();
         $files = scandir($dir);
@@ -43,14 +43,14 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
     public function addAction () {
 
         try {
-            Tool_SqlReport_Config::getByName($this->getParam("name"));
+            Tool_CustomReport_Config::getByName($this->getParam("name"));
             $alreadyExist = true;
         } catch (Exception $e) {
             $alreadyExist = false;
         }
 
         if(!$alreadyExist) {
-            $report = new Tool_SqlReport_Config();
+            $report = new Tool_CustomReport_Config();
             $report->setName($this->getParam("name"));
             $report->save();
         }
@@ -60,7 +60,7 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
 
     public function deleteAction () {
 
-        $report = Tool_SqlReport_Config::getByName($this->getParam("name"));
+        $report = Tool_CustomReport_Config::getByName($this->getParam("name"));
         $report->delete();
 
         $this->_helper->json(array("success" => true));
@@ -69,17 +69,16 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
 
     public function getAction () {
 
-        $report = Tool_SqlReport_Config::getByName($this->getParam("name"));
+        $report = Tool_CustomReport_Config::getByName($this->getParam("name"));
         $this->_helper->json($report);
     }
 
 
     public function updateAction () {
 
-        $report = Tool_SqlReport_Config::getByName($this->getParam("name"));
+        $report = Tool_CustomReport_Config::getByName($this->getParam("name"));
         $data = Zend_Json::decode($this->getParam("configuration"));
         $data = array_htmlspecialchars($data);
-
         foreach ($data as $key => $value) {
             $setter = "set" . ucfirst($key);
             if(method_exists($report, $setter)) {
@@ -92,26 +91,18 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
         $this->_helper->json(array("success" => true));
     }
 
-    public function sqlConfigAction() {
+    public function columnConfigAction() {
 
-        $sql = $this->getParam("sql");
+        $configuration = json_decode($this->getParam("configuration"));
+        $configuration = $configuration[0];
+        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
+
         $success = false;
-        $res = null;
-        $errorMessage = null;
         $columns = null;
-
+        $errorMessage = null;
         try {
-            if(!preg_match("/(ALTER|CREATE|DROP|RENAME|TRUNCATE|UPDATE|DELETE) /i", $sql, $matches)) {
-
-                $sql .= " LIMIT 0,1";
-
-                $db = Pimcore_Resource::get();
-                $res = $db->fetchRow($sql);
-                $columns = array_keys($res);
-                $success = true;
-            } else {
-                $errorMessage = "Only 'SELECT' statements are allowed! You've used '" . $matches[0] . "'";
-            }
+            $columns = $adapter->getColumns($configuration);
+            $success = true;
         } catch (\Exception $e) {
             $errorMessage = $e->getMessage();
         }
@@ -124,14 +115,14 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
     }
 
     public function getReportConfigAction() {
-        $dir = Tool_SqlReport_Config::getWorkingDir();
+        $dir = Tool_CustomReport_Config::getWorkingDir();
 
         $reports = array();
         $files = scandir($dir);
         foreach ($files as $file) {
             if(strpos($file, ".xml")) {
                 $name = str_replace(".xml", "", $file);
-                $report = Tool_SqlReport_Config::getByName($name);
+                $report = Tool_CustomReport_Config::getByName($name);
                 $reports[] = array(
                     "name" => $report->getName(),
                     "niceName" => $report->getNiceName(),
@@ -150,49 +141,65 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
     }
 
     public function dataAction() {
-
-        $db = Pimcore_Resource::get();
-        $data = array();
         $offset = $this->getParam("start", 0);
         $limit = $this->getParam("limit", 40);
         $sort = $this->getParam("sort");
         $dir = $this->getParam("dir");
+        $filters = ($this->_getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
 
-        $baseQuery = $this->getBaseQuery();
+        $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
+        $configuration = $config->getDataSourceConfig();
+        $configuration = $configuration[0];
+        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
 
-        if($baseQuery) {
-            $total = $db->fetchOne($baseQuery["count"]);
-
-            $order = "";
-            if($sort && dir) {
-                $order = " ORDER BY " . $db->quoteIdentifier($sort) . " " . $dir;
-            }
-
-            $sql = $baseQuery["data"] . $order . " LIMIT $offset,$limit";
-            $data = $db->fetchAll($sql);
-        }
+        $result = $adapter->getData($filters, $sort, $dir, $offset, $limit);
 
         $this->_helper->json(array(
             "success" => true,
-            "data" => $data,
-            "total" => $total
+            "data" => $result['data'],
+            "total" => $result['total']
+        ));
+    }
+
+    public function chartAction() {
+        $sort = $this->getParam("sort");
+        $dir = $this->getParam("dir");
+        $filters = ($this->_getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+
+        $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
+        $configuration = $config->getDataSourceConfig();
+        $configuration = $configuration[0];
+        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
+
+        $result = $adapter->getData($filters, $sort, $dir, null, null);
+
+        $this->_helper->json(array(
+            "success" => true,
+            "data" => $result['data'],
+            "total" => $result['total']
         ));
     }
 
     public function downloadCsvAction() {
-
         set_time_limit(300);
 
-        $db = Pimcore_Resource::get();
+        $sort = $this->getParam("sort");
+        $dir = $this->getParam("dir");
+        $filters = ($this->_getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+
+        $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
+        $configuration = $config->getDataSourceConfig();
+        $configuration = $configuration[0];
+        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
+
+        $result = $adapter->getData($filters, $sort, $dir, null, null);
+
         $exportFile = PIMCORE_SYSTEM_TEMP_DIRECTORY . "/report-export-" . uniqid() . ".csv";
         @unlink($exportFile);
 
-        $baseQuery = $this->getBaseQuery();
-        $result = $db->fetchAll($baseQuery["data"]);
-
         $fp = fopen($exportFile, 'w');
 
-        foreach ($result as $row) {
+        foreach ($result['data'] as $row) {
             fputcsv($fp, array_values($row));
         }
 
@@ -209,53 +216,6 @@ class Reports_SqlController extends Pimcore_Controller_Action_Admin_Reports {
         exit;
     }
 
-    protected function getBaseQuery() {
-        $db = Pimcore_Resource::get();
-        $condition = array("1 = 1");
 
-        $report = Tool_SqlReport_Config::getByName($this->getParam("name"));
-        $sql = $report->getSql();
-        $data = "";
-
-        if($this->getParam("filter")) {
-            $filters = Zend_Json::decode($this->getParam("filter"));
-
-            if(is_array($filters)) {
-                foreach ($filters as $filter) {
-                    if($filter["type"] == "string") {
-                        $condition[] = $db->quoteIdentifier($filter["field"]) . " LIKE " . $db->quote("%" . $filter["value"] . "%");
-                    } else if($filter["type"] == "numeric") {
-                        $compMapping = array(
-                            "lt" => "<",
-                            "gt" => ">",
-                            "eq" => "="
-                        );
-                        if($compMapping[$filter["comparison"]]) {
-                            $condition[] = $db->quoteIdentifier($filter["field"]) . " " . $compMapping[$filter["comparison"]] . " " . $db->quote($filter["value"]);
-                        }
-                    } else if ($filter["type"] == "boolean") {
-                        $condition[] = $db->quoteIdentifier($filter["field"]) . " = " . $db->quote((int)$filter["value"]);
-                    } else if ($filter["type"] == "date") {
-
-                    }
-                }
-            }
-        }
-
-        if(!preg_match("/(ALTER|CREATE|DROP|RENAME|TRUNCATE|UPDATE|DELETE) /i", $sql, $matches)) {
-
-            $condition = implode(" AND ", $condition);
-
-            $total = "SELECT COUNT(*) FROM (" . $sql . ") AS somerandxyz WHERE " . $condition;
-            $data = "SELECT * FROM (" . $sql . ") AS somerandxyz WHERE " . $condition;
-        } else {
-            return;
-        }
-
-        return array(
-            "data" => $data,
-            "count" => $total
-        );
-    }
 }
 

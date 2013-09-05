@@ -12,8 +12,8 @@
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
-pimcore.registerNS("pimcore.report.sql.report");
-pimcore.report.sql.report = Class.create(pimcore.report.abstract, {
+pimcore.registerNS("pimcore.report.custom.report");
+pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
 
     matchType: function (type) {
         var types = ["global"];
@@ -38,10 +38,13 @@ pimcore.report.sql.report = Class.create(pimcore.report.abstract, {
         var colConfig;
         var grodColConfig = {};
         var filters = [];
+        this.columnLabels = {};
 
         for(var f=0; f<data.columnConfiguration.length; f++) {
             colConfig = data.columnConfiguration[f];
             storeFields.push(colConfig["name"]);
+
+            this.columnLabels[colConfig["name"]] = colConfig["label"] ? ts(colConfig["label"]) : ts(colConfig["name"]);
 
             grodColConfig = {
                 header: colConfig["label"] ? ts(colConfig["label"]) : ts(colConfig["name"]),
@@ -75,11 +78,25 @@ pimcore.report.sql.report = Class.create(pimcore.report.abstract, {
 
         this.store = new Ext.data.JsonStore({
             autoDestroy: true,
-            url: "/admin/reports/sql/data",
+            url: "/admin/reports/custom-report/data",
             root: 'data',
             remoteSort: true,
             baseParams: {
                 name: this.config["name"]
+            },
+            listeners: {
+                load: function() {
+                    if(this.chartStore) {
+                        var filterData = this.gridFilters.getFilterData();
+                        this.chartStore.load({
+                            params: {
+                                name: this.config["name"],
+                                filter: this.gridFilters.buildQuery(filterData).filter
+                            }
+                        });
+                    }
+
+                }.bind(this)
             },
             fields: storeFields
         });
@@ -121,6 +138,7 @@ pimcore.report.sql.report = Class.create(pimcore.report.abstract, {
         }));
 
         this.grid = new Ext.grid.GridPanel({
+            region: "center",
             store: this.store,
             bbar: this.pagingtoolbar,
             columns: gridColums,
@@ -146,50 +164,166 @@ pimcore.report.sql.report = Class.create(pimcore.report.abstract, {
 
                     query += "&name=" + this.config.name;
 
-                    var downloadUrl = "/admin/reports/sql/download-csv?" + query;
+                    var downloadUrl = "/admin/reports/custom-report/download-csv?" + query;
                     pimcore.helpers.download(downloadUrl);
                 }.bind(this)
             }]
         });
 
-        this.panel.add(this.grid);
-        this.panel.doLayout();
+        return this.grid;
+    },
+
+    chartColors: [
+        0x01841c,
+        0x3D32FF,
+        0xFF1000,
+        0xFFEE00,
+        0x00FF21,
+        0x7F92FF,
+        0xFFD800
+    ],
+
+    getChart: function(data) {
+        var chartPanel = null;
+
+        if(data.chartType == 'line' || data.chartType == 'bar') {
+            var storeFields = [];
+            storeFields.push(data.xAxis);
+            for(var i = 0; i < data.yAxis.length; i++) {
+                storeFields.push(data.yAxis[i]);
+            }
+
+            this.chartStore = new Ext.data.JsonStore({
+                autoDestroy: true,
+                url: "/admin/reports/custom-report/chart",
+                root: 'data',
+                baseParams: {
+                    name: this.config["name"]
+                },
+                fields: storeFields
+            });
+
+            var series = [];
+            for(var i = 0; i < data.yAxis.length; i++) {
+                series.push({
+                    displayName: this.columnLabels[data.yAxis[i]],
+                    type: (data.chartType == 'line' ? 'line' : 'column'),
+                    yField: data.yAxis[i],
+                    style: {
+                        color: this.chartColors[i]
+                    }
+                });
+            }
+
+            chartPanel = new Ext.Panel({
+                id:"cartID",
+                region: "north",
+                height: 350,
+                border: false,
+                items: [{
+                    xtype: (data.chartType == 'line' ? 'linechart' : 'columnchart'),
+                    store: this.chartStore,
+                    xField: data.xAxis,
+                    chartStyle: {
+                        padding: 10,
+                        legend: {
+                            display: 'bottom'
+                        }
+                    },
+                    series: series
+                }]
+            });
+        } else if(data.chartType == 'pie') {
+            this.chartStore = new Ext.data.JsonStore({
+                autoDestroy: true,
+                url: "/admin/reports/custom-report/chart",
+                root: 'data',
+                baseParams: {
+                    name: this.config["name"]
+                },
+                fields: [data.pieLabelColumn, data.pieColumn]
+            });
+            this.chartStore.load();
+
+            chartPanel = new Ext.Panel({
+                region: "north",
+                height: 350,
+                border: false,
+                items: [{
+                    store: this.chartStore,
+                    xtype: 'piechart',
+                    dataField: data.pieColumn,
+                    categoryField: data.pieLabelColumn,
+                    chartStyle: {
+                        padding: 10,
+                        legend: {
+                            display: 'right'
+                        }
+                    }
+                }]
+            });
+        }
+
+        return chartPanel;
     },
 
     getPanel: function () {
 
         if(!this.panel) {
             this.panel = new Ext.Panel({
+                id: "panel",
                 title: this.config["niceName"],
                 layout: "fit",
                 border: false,
                 items: []
             });
 
+
             Ext.Ajax.request({
-                url: "/admin/reports/sql/get",
+                url: "/admin/reports/custom-report/get",
                 params: {
                     name: this.config.name
                 },
                 success: function (response) {
                     var data = Ext.decode(response.responseText);
-                    this.initGrid(data);
+                    var grid = this.initGrid(data);
+
+                    var items = [];
+                    if(data.chartType) {
+                        var chartPanel = this.getChart(data);
+                        if(chartPanel) {
+                            items.push(chartPanel);
+                        }
+                    }
+
+                    items.push(grid);
+
+                    var subPanel = new Ext.Panel({
+                        layout: "border",
+                        border: false,
+                        items: items
+                    });
+
+                    this.panel.add(subPanel);
+                    this.panel.doLayout();
                 }.bind(this)
             });
         }
 
         return this.panel;
     }
+
+
 });
 
 
 
 
-pimcore.registerNS("pimcore.report.sql.reportplugin");
-pimcore.report.sql.reportplugin = Class.create(pimcore.plugin.admin, {
+pimcore.registerNS("pimcore.report.custom.reportplugin");
+pimcore.report.custom.reportplugin = Class.create(pimcore.plugin.admin, {
 
     getClassName: function() {
-        return "pimcore.report.sql.reportplugin";
+        return "pimcore.report.custom.reportplugin";
     },
 
     initialize: function() {
@@ -203,7 +337,7 @@ pimcore.report.sql.reportplugin = Class.create(pimcore.plugin.admin, {
 
             // get available reports
             Ext.Ajax.request({
-                url: "/admin/reports/sql/get-report-config",
+                url: "/admin/reports/custom-report/get-report-config",
                 success: function (response) {
                     var res = Ext.decode(response.responseText);
                     var report;
@@ -214,7 +348,7 @@ pimcore.report.sql.reportplugin = Class.create(pimcore.plugin.admin, {
 
                             // set some defaults
                             if(!report["group"]) {
-                                report["group"] = "sql_reports"
+                                report["group"] = "custom_reports"
                             }
 
                             if(!report["niceName"]) {
@@ -230,7 +364,7 @@ pimcore.report.sql.reportplugin = Class.create(pimcore.plugin.admin, {
                             }
 
                             pimcore.report.broker.addGroup(report["group"], report["group"], report["groupIconClass"]);
-                            pimcore.report.broker.addReport(pimcore.report.sql.report, report["group"], {
+                            pimcore.report.broker.addReport(pimcore.report.custom.report, report["group"], {
                                 name: report["name"],
                                 text: report["niceName"],
                                 niceName: report["niceName"],
@@ -246,7 +380,7 @@ pimcore.report.sql.reportplugin = Class.create(pimcore.plugin.admin, {
                                             text: report["niceName"],
                                             iconCls: report["iconClass"],
                                             handler: function (report) {
-                                                toolbar.showReports(pimcore.report.sql.report, {
+                                                toolbar.showReports(pimcore.report.custom.report, {
                                                     name: report["name"],
                                                     text: report["niceName"],
                                                     niceName: report["niceName"],
@@ -268,6 +402,6 @@ pimcore.report.sql.reportplugin = Class.create(pimcore.plugin.admin, {
 });
 
 (function() {
-    new pimcore.report.sql.reportplugin();
+    new pimcore.report.custom.reportplugin();
 })();
 

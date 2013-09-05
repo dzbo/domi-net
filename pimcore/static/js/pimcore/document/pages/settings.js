@@ -263,20 +263,32 @@ pimcore.document.pages.settings = Class.create({
                         defaultType: 'textarea',
                         items :[
                             {
-                                fieldLabel: t('title'),
+                                fieldLabel: t('title') + " (" + this.page.data.title.length + ")",
                                 name: 'title',
                                 maxLength: 255,
                                 height: 51,
                                 width: 500,
-                                value: this.page.data.title
+                                value: this.page.data.title,
+                                enableKeyEvents: true,
+                                listeners: {
+                                    "keyup": function (el) {
+                                        el.label.update(t("title") + " (" + el.getValue().length + "):");
+                                    }
+                                }
                             },
                             {
-                                fieldLabel: t('description'),
+                                fieldLabel: t('description') + " (" + this.page.data.description.length + ")",
                                 maxLength: 255,
                                 height: 51,
                                 width: 500,
                                 name: 'description',
-                                value: this.page.data.description
+                                value: this.page.data.description,
+                                enableKeyEvents: true,
+                                listeners: {
+                                    "keyup": function (el) {
+                                        el.label.update(t("description") + " (" + el.getValue().length + "):");
+                                    }
+                                }
                             },
                             {
                                 fieldLabel: t('keywords'),
@@ -384,7 +396,7 @@ pimcore.document.pages.settings = Class.create({
                                 disableKeyFilter: true,
                                 store: new Ext.data.JsonStore({
                                     autoDestroy: true,
-                                    url: "/admin/document/get-available-controllers",
+                                    url: "/admin/misc/get-available-controllers",
                                     root: "data",
                                     fields: ["name"]
                                 }),
@@ -408,7 +420,7 @@ pimcore.document.pages.settings = Class.create({
                                 disableKeyFilter: true,
                                 store: new Ext.data.JsonStore({
                                     autoDestroy: true,
-                                    url: "/admin/document/get-available-actions",
+                                    url: "/admin/misc/get-available-actions",
                                     root: "data",
                                     fields: ["name"]
                                 }),
@@ -436,7 +448,7 @@ pimcore.document.pages.settings = Class.create({
                                 disableKeyFilter: true,
                                 store: new Ext.data.JsonStore({
                                     autoDestroy: true,
-                                    url: "/admin/document/get-available-templates",
+                                    url: "/admin/misc/get-available-templates",
                                     root: "data",
                                     fields: ["path"]
                                 }),

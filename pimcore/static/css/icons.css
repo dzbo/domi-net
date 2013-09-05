@@ -11,7 +11,11 @@
  * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
  * @license    http://www.pimcore.org/license     New BSD License
  */
- 
+
+.pimcore_icon_clone  {
+    background: url(/pimcore/static/img/icon/application_double.png) left center no-repeat !important;
+}
+
 .pimcore_icon_droptarget  {
 	background: url(/pimcore/static/img/icon/drop-16.png) left center no-repeat !important;
 }
@@ -178,7 +182,7 @@
 	background: url(/pimcore/static/img/icon/script.png) no-repeat !important;
 }
 
-.pimcore_icon_mpg, .pimcore_icon_mpeg, .pimcore_icon_divx, .pimcore_icon_avi, .pimcore_icon_mov, .pimcore_icon_wmv, .pimcore_icon_3gp, .pimcore_icon_f4v, .pimcore_icon_flv, .pimcore_icon_mp4 {
+.pimcore_icon_mpg, .pimcore_icon_mpeg, .pimcore_icon_divx, .pimcore_icon_avi, .pimcore_icon_mov, .pimcore_icon_wmv, .pimcore_icon_3gp, .pimcore_icon_f4v, .pimcore_icon_flv, .pimcore_icon_mp4, .pimcore_icon_webm {
 	background: url(/pimcore/static/img/icon/film.png) no-repeat !important;
 }
 
@@ -967,6 +971,9 @@
 .pimcore_icon_plus {
 	background: url(/pimcore/static/img/icon/add.png) !important;
 }
+.pimcore_icon_plus_no_repeat {
+    background: url(/pimcore/static/img/icon/add.png) left center no-repeat !important;
+}
 
 .pimcore_icon_minus {
 	background: url(/pimcore/static/img/icon/delete.png) left center no-repeat !important;
@@ -1345,4 +1352,8 @@
 
 .pimcore_icon_deployment {
     background: url(/pimcore/static/img/icon/database_refresh.png) left center no-repeat !important;
+}
+
+.pimcore_icon_video {
+    background: url(/pimcore/static/img/icon/film.png) left center no-repeat !important;
 }

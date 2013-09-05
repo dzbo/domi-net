@@ -244,6 +244,7 @@ $scripts = array(
     "pimcore/element/note_details.js",
     "pimcore/element/tag/imagecropper.js",
     "pimcore/element/tag/imagehotspotmarkereditor.js",
+    "pimcore/element/replace_assignments.js",
     "pimcore/object/helpers/grid.js",
     "pimcore/object/helpers/gridConfigDialog.js",
     "pimcore/object/helpers/classTree.js",
@@ -292,6 +293,7 @@ $scripts = array(
     "pimcore/object/classes/data/href.js",
     "pimcore/object/classes/data/image.js",
     "pimcore/object/classes/data/hotspotimage.js",
+    "pimcore/object/classes/data/video.js",
     "pimcore/object/classes/data/input.js",
     "pimcore/object/classes/data/numeric.js",
     "pimcore/object/classes/data/objects.js",
@@ -348,6 +350,7 @@ $scripts = array(
     "pimcore/object/tags/href.js",
     "pimcore/object/tags/image.js",
     "pimcore/object/tags/hotspotimage.js",
+    "pimcore/object/tags/video.js",
     "pimcore/object/tags/input.js",
     "pimcore/object/tags/numeric.js",
     "pimcore/object/tags/objects.js",
@@ -416,10 +419,11 @@ $scripts = array(
     "pimcore/report/contentanalysis/settings.js",
     "pimcore/report/seo/detail.js",
     "pimcore/report/seo/socialoverview.js",
-    "pimcore/report/sql/item.js",
-    "pimcore/report/sql/panel.js",
-    "pimcore/report/sql/settings.js",
-    "pimcore/report/sql/report.js",
+    "pimcore/report/custom/item.js",
+    "pimcore/report/custom/panel.js",
+    "pimcore/report/custom/settings.js",
+    "pimcore/report/custom/report.js",
+    "pimcore/report/custom/definitions/sql.js",
 
     "pimcore/settings/tagmanagement/panel.js",
     "pimcore/settings/tagmanagement/item.js",
@@ -501,7 +505,8 @@ if($this->config->services->google->browserapikey) {
         showCloseConfirmation: true,
         debug_admin_translations: <?php echo Zend_Json::encode((bool) $this->config->general->debug_admin_translations) ?>,
         document_generatepreviews: <?php echo Zend_Json::encode((bool) $this->config->documents->generatepreview) ?>,
-        htmltoimage: <?php echo Zend_Json::encode(Pimcore_Image_HtmlToImage::isSupported()) ?>
+        htmltoimage: <?php echo Zend_Json::encode(Pimcore_Image_HtmlToImage::isSupported()) ?>,
+        videoconverter: <?php echo Zend_Json::encode(Pimcore_Video::isAvailable()) ?>
     };
 </script>
 

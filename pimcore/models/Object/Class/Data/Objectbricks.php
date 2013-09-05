@@ -59,7 +59,7 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
     }
 
     private function doGetDataForEditmode($data, $getter, $objectFromVersion, $level = 0) {
-//        p_r($data); die();
+
         $parent = Object_Service::hasInheritableParentObject($data->getObject());
         $item = $data->$getter();
         if(!$item && !empty($parent)) {
@@ -177,11 +177,8 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
      */
     public function getDataFromEditmode($data, $object = null)
     {
+        $container = $this->getDataFromObjectParam($object);
 
-        $getter = "get" . ucfirst($this->getName());
-
-
-        $container = $object->$getter(); //$this->getObject()->$getter();
         if(empty($container)) {
             $className = $object->getClass()->getName(); //$this->getObject()->getClass()->getName();
 
@@ -254,8 +251,7 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
 
     public function save($object, $params = array())
     {
-        $getter = "get" . ucfirst($this->getName());
-        $container = $object->$getter();
+        $container = $this->getDataFromObjectParam($object);
         if ($container instanceof Object_Objectbrick) {
             $container->save($object);
         }
@@ -317,8 +313,7 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
      */
     public function getForWebserviceExport($object)
     {
-        $getter = "get" . ucfirst($this->getName());
-        $data = $object->$getter();
+        $data = $this->getDataFromObjectParam($object);
         $wsData = array();
 
         if ($data instanceof Object_Objectbrick) {
@@ -594,7 +589,6 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
 
 
     private function getDiffDataForField($item, $key, $fielddefinition, $level, $baseObject, $getter, $objectFromVersion) {
-        $parent = Object_Service::hasInheritableParentObject($baseObject);
         $valueGetter = "get" . ucfirst($key);
 
         $value = $fielddefinition->getDiffDataForEditmode($item->$valueGetter(), $baseObject);
@@ -607,7 +601,6 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
      * @return array|null
      */
     private function doGetDiffDataForEditmode($data, $getter, $objectFromVersion, $level = 0) {
-//        p_r($data); die();
         $parent = Object_Service::hasInheritableParentObject($data->getObject());
         $item = $data->$getter();
 
@@ -625,9 +618,6 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
         } catch (Exception $e) {
             return null;
         }
-
-        $brickData = array();
-        $brickMetaData = array();
 
         $result = array();
 
@@ -741,4 +731,45 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
         return true;
     }
 
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+
+        if ($data instanceof Object_Objectbrick) {
+            $items = $data->getItems();
+            foreach ($items as $item) {
+                if (!$item instanceof Object_Objectbrick_Data_Abstract) {
+                    continue;
+                }
+
+                try {
+                    $collectionDef = Object_Objectbrick_Definition::getByKey($item->getType());
+                } catch (Exception $e) {
+                    continue;
+                }
+
+                foreach ($collectionDef->getFieldDefinitions() as $fd) {
+                    $d = $fd->rewriteIds($item, $idMapping, $params);
+                    $setter = "set" . ucfirst($fd->getName());
+                    $item->$setter($d);
+                }
+            }
+        }
+
+        return $data;
+    }
 }

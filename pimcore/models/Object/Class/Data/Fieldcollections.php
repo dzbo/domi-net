@@ -174,9 +174,7 @@ class Object_Class_Data_Fieldcollections extends Object_Class_Data
 
     public function save($object, $params = array())
     {
-
-        $getter = "get" . ucfirst($this->getName());
-        $container = $object->$getter();
+        $container = $this->getDataFromObjectParam($object);
 
         if ($container instanceof Object_Fieldcollection) {
             $container->save($object);
@@ -238,8 +236,7 @@ class Object_Class_Data_Fieldcollections extends Object_Class_Data
      */
     public function getForWebserviceExport($object)
     {
-        $getter = "get" . ucfirst($this->getName());
-        $data = $object->$getter();
+        $data = $this->getDataFromObjectParam($object);
         $wsData = array();
 
         if ($data instanceof Object_Fieldcollection) {
@@ -372,8 +369,7 @@ class Object_Class_Data_Fieldcollections extends Object_Class_Data
                 }
 
                 foreach ($collectionDef->getFieldDefinitions() as $fd) {
-                    $key = $fd->getName();
-                    $getter = "get" . ucfirst($key);
+                    $getter = "get" . ucfirst($fd->getName());
                     $dependencies = array_merge($dependencies, $fd->resolveDependencies($item->$getter()));
                 }
             }
@@ -405,8 +401,7 @@ class Object_Class_Data_Fieldcollections extends Object_Class_Data
                 }
 
                 foreach ($collectionDef->getFieldDefinitions() as $fd) {
-                    $key = $fd->getName();
-                    $getter = "get" . ucfirst($key);
+                    $getter = "get" . ucfirst($fd->getName());
                     $tags = $fd->getCacheTags($item->$getter(), $item, $tags);
                 }
             }
@@ -440,8 +435,7 @@ class Object_Class_Data_Fieldcollections extends Object_Class_Data
                     }
 
                     foreach ($collectionDef->getFieldDefinitions() as $fd) {
-                        $key = $fd->getName();
-                        $getter = "get" . ucfirst($key);
+                        $getter = "get" . ucfirst($fd->getName());
                         $fd->checkValidity($item->$getter());
                     }
                 }
@@ -597,4 +591,44 @@ class Object_Class_Data_Fieldcollections extends Object_Class_Data
         return $result;
     }
 
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+
+        if ($data instanceof Object_Fieldcollection) {
+            foreach ($data as $item) {
+                if (!$item instanceof Object_Fieldcollection_Data_Abstract) {
+                    continue;
+                }
+
+                try {
+                    $collectionDef = Object_Fieldcollection_Definition::getByKey($item->getType());
+                } catch (Exception $e) {
+                    continue;
+                }
+
+                foreach ($collectionDef->getFieldDefinitions() as $fd) {
+                    $d = $fd->rewriteIds($item, $idMapping, $params);
+                    $setter = "set" . ucfirst($fd->getName());
+                    $item->$setter($d);
+                }
+            }
+        }
+
+        return $data;
+    }
 }

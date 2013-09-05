@@ -34,6 +34,10 @@ class Tool_Lock_Resource extends Pimcore_Model_Resource_Abstract {
     }
 
     public function isLocked ($key, $expire = 120) {
+        if(!is_numeric($expire)) {
+            $expire = 120;
+        }
+
         $lock = $this->db->fetchRow("SELECT * FROM locks WHERE id = ?", $key);
 
         // a lock is only valid for 2 minutes
@@ -44,22 +48,21 @@ class Tool_Lock_Resource extends Pimcore_Model_Resource_Abstract {
                 $this->release($key);
                 return false;
             }
-            return false;
         }
 
         return true;
     }
 
-    public function acquire ($key) {
-
-        while($this->isLocked($key)) {
-            sleep(1);
+    public function acquire ($key, $expire = 120, $refreshInterval = 1) {
+        if(!is_numeric($refreshInterval)) {
+            $refreshInterval = 1;
         }
 
-        $this->db->insert("locks", array(
-            "id" => $key,
-            "date" => time()
-        ));
+        while($this->isLocked($key, $expire)) {
+            sleep($refreshInterval);
+        }
+
+        $this->lock($key);
     }
 
     public function release ($key) {
@@ -71,5 +74,10 @@ class Tool_Lock_Resource extends Pimcore_Model_Resource_Abstract {
             "id" => $key,
             "date" => time()
         ));
+    }
+
+    public function getById($key) {
+        $lock = $this->db->fetchRow("SELECT * FROM locks WHERE id = ?", $key);
+        $this->assignVariablesToModel($lock);
     }
 }

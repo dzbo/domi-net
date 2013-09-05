@@ -396,7 +396,9 @@ class Admin_ObjectController extends Pimcore_Controller_Action_Admin
             if ($fielddefinition->isRemoteOwner()) {
                 $refKey = $fielddefinition->getOwnerFieldName();
                 $refClass = Object_Class::getByName($fielddefinition->getOwnerClassName());
-                $refId = $refClass->getId();
+                if($refClass) {
+                    $refId = $refClass->getId();
+                }
             } else {
                 $refKey = $key;
             }
@@ -883,7 +885,7 @@ class Admin_ObjectController extends Pimcore_Controller_Action_Admin
             // do not allow all values to be set, will cause problems (eg. icon)
             if (is_array($general) && count($general) > 0) {
                 foreach ($general as $key => $value) {
-                    if(!in_array($key, array("o_id", "o_classId", "o_className", "o_type", "icon"))) {
+                    if(!in_array($key, array("o_id", "o_classId", "o_className", "o_type", "icon", "o_userOwner", "o_userModification"))) {
                         $object->setValue($key,$value);
                     }
                 }
@@ -1303,10 +1305,10 @@ class Admin_ObjectController extends Pimcore_Controller_Action_Admin
         $pasteJobs = array();
 
         Pimcore_Tool_Session::useSession(function ($session) use ($transactionId) {
-            $session->$transactionId = array();
+            $session->$transactionId = array("idMapping" => array());
         }, "pimcore_copy");
 
-        if ($this->getParam("type") == "recursive") {
+        if ($this->getParam("type") == "recursive" || $this->getParam("type") == "recursive-update-references") {
 
             $object = Object_Abstract::getById($this->getParam("sourceId"));
 
@@ -1346,6 +1348,19 @@ class Admin_ObjectController extends Pimcore_Controller_Action_Admin
                     }
                 }
             }
+
+            // add id-rewrite steps
+            if($this->getParam("type") == "recursive-update-references") {
+                for($i=0; $i<(count($childIds)+1); $i++) {
+                    $pasteJobs[] = array(array(
+                        "url" => "/admin/object/copy-rewrite-ids",
+                        "params" => array(
+                            "transactionId" => $transactionId,
+                            "_dc" => uniqid()
+                        )
+                    ));
+                }
+            }
         }
         else if ($this->getParam("type") == "child" || $this->getParam("type") == "replace") {
             // the object itself is the last one
@@ -1366,6 +1381,40 @@ class Admin_ObjectController extends Pimcore_Controller_Action_Admin
         ));
     }
 
+    public function copyRewriteIdsAction () {
+
+        $transactionId = $this->getParam("transactionId");
+
+        $idStore = Pimcore_Tool_Session::useSession(function ($session) use ($transactionId) {
+            return $session->$transactionId;
+        }, "pimcore_copy");
+
+        if(!array_key_exists("rewrite-stack",$idStore)) {
+            $idStore["rewrite-stack"] = array_values($idStore["idMapping"]);
+        }
+
+        $id = array_shift($idStore["rewrite-stack"]);
+        $object = Object_Abstract::getById($id);
+
+        // create rewriteIds() config parameter
+        $rewriteConfig = array("object" => $idStore["idMapping"]);
+
+        $object = Object_Service::rewriteIds($object, $rewriteConfig);
+
+        $object->setUserModification($this->getUser()->getId());
+        $object->save();
+
+
+        // write the store back to the session
+        Pimcore_Tool_Session::useSession(function ($session) use ($transactionId, $idStore) {
+            $session->$transactionId = $idStore;
+        }, "pimcore_copy");
+
+        $this->_helper->json(array(
+            "success" => true,
+            "id" => $id
+        ));
+    }
 
     public function copyAction()
     {
@@ -1398,6 +1447,8 @@ class Admin_ObjectController extends Pimcore_Controller_Action_Admin
                 try {
                     if ($this->getParam("type") == "child") {
                         $newObject = $this->_objectService->copyAsChild($target, $source);
+
+                        $session->{$this->getParam("transactionId")}["idMapping"][(int) $source->getId()] = (int) $newObject->getId();
 
                         // this is because the key can get the prefix "_copy" if the target does already exists
                         if($this->getParam("saveParentId")) {

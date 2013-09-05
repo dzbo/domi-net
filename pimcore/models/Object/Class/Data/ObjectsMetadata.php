@@ -276,9 +276,7 @@ class Object_Class_Data_ObjectsMetadata extends Object_Class_Data_Objects {
      * @return string
      */
     public function getForCsvExport($object) {
-        $key = $this->getName();
-        $getter = "get".ucfirst($key);
-        $data = $object->$getter();
+        $data = $this->getDataFromObjectParam($object);
         if (is_array($data)) {
             $paths = array();
             foreach ($data as $metaObject) {
@@ -361,9 +359,7 @@ class Object_Class_Data_ObjectsMetadata extends Object_Class_Data_Objects {
 
     public function getForWebserviceExport ($object) {
 
-        $key = $this->getName();
-        $getter = "get".ucfirst($key);
-        $data = $object->$getter();
+        $data = $this->getDataFromObjectParam($object);
         if (is_array($data)) {
             $items = array();
             foreach ($data as $metaObject) {
@@ -441,8 +437,7 @@ class Object_Class_Data_ObjectsMetadata extends Object_Class_Data_Objects {
      */
     public function save($object, $params = array()) {
 
-        $getter = "get" . ucfirst($this->getName());
-        $objectsMetadata = $object->$getter();
+        $objectsMetadata = $this->getDataFromObjectParam($object);
 
         $classId = null;
         $objectId = null;
@@ -582,5 +577,41 @@ class Object_Class_Data_ObjectsMetadata extends Object_Class_Data_Objects {
         $className = Pimcore_Tool::getModelClassMapping('Object_Data_ObjectMetadata');
         $temp = new $className(null);
         $temp->getResource()->createOrUpdateTable($class);
+    }
+
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+
+        if (is_array($data)) {
+            foreach ($data as &$metaObject) {
+                $eo = $metaObject->getObject();
+                if ($eo instanceof Element_Interface) {
+                    $id = $eo->getId();
+                    $type = Element_Service::getElementType($eo);
+
+                    if(array_key_exists($type, $idMapping) && array_key_exists($id, $idMapping[$type])) {
+                        $newElement = Element_Service::getElementById($type, $idMapping[$type][$id]);
+                        $metaObject->setObject($newElement);
+                    }
+                }
+            }
+        }
+
+        return $data;
     }
 }

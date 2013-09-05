@@ -24,12 +24,14 @@ pimcore.object.tags.hotspotimage = Class.create(pimcore.object.tags.image, {
     initialize: function (data, fieldConfig) {
         this.hotspots = [];
         this.marker = [];
+        this.crop = [];
 
         this.data = null;
         if (data) {
             this.data = data.image;
             this.hotspots = data.hotspots;
             this.marker = data.marker;
+            this.crop = data.crop;
         }
         this.fieldConfig = fieldConfig;
     },
@@ -73,6 +75,10 @@ pimcore.object.tags.hotspotimage = Class.create(pimcore.object.tags.image, {
                 text: "<b>" + this.fieldConfig.title + "</b>"
             },"->",{
                 xtype: "button",
+                iconCls: "pimcore_icon_image_region",
+                handler: this.openCropWindow.bind(this)
+            },{
+                xtype: "button",
                 iconCls: "pimcore_icon_image_add_hotspot",
                 handler: this.openHotspotWindow.bind(this)
             },{
@@ -110,7 +116,7 @@ pimcore.object.tags.hotspotimage = Class.create(pimcore.object.tags.image, {
         this.component.add(this.panel);
 
 
-        this.panel.on("render", function (el) {
+        this.panel.on("afterrender", function (el) {
 
             // add drop zone
             new Ext.dd.DropZone(el.getEl(), {
@@ -147,11 +153,38 @@ pimcore.object.tags.hotspotimage = Class.create(pimcore.object.tags.image, {
     },
 
     updateImage: function () {
-        var path = "/admin/asset/get-image-thumbnail/id/" + this.data + "/width/" + (this.fieldConfig.width - 2)
-                                        + "/height/" + (this.fieldConfig.height - 30) + "/aspectratio/true";
-        this.panel.update('<img align="center" class="pimcore_droptarget_image" src="' + path + '" />');
+
+        // 5px padding (-10)
+        var width = this.getBody().getWidth()-10;
+        var height = this.getBody().getHeight()-10;
+
+        var path = "/admin/asset/get-image-thumbnail/id/" + this.data + "/width/" + width
+                                        + "/height/" + height + "/contain/true" + "?" + Ext.urlEncode(this.crop);
+
+        this.getBody().setStyle({
+            backgroundImage: "url(" + path + ")",
+            backgroundPosition: "center center",
+            backgroundRepeat: "no-repeat"
+        });
+        this.getBody().repaint();
     },
 
+
+    openCropWindow: function () {
+        var editor = new pimcore.element.tag.imagecropper(this.data, this.crop, function (data) {
+            this.crop = {};
+            this.crop["cropWidth"] = data.cropWidth;
+            this.crop["cropHeight"] = data.cropHeight;
+            this.crop["cropTop"] = data.cropTop;
+            this.crop["cropLeft"] = data.cropLeft;
+            this.crop["cropPercent"] = true;
+
+            this.dirty = true;
+
+            this.updateImage();
+        }.bind(this));
+        editor.open(true);
+    },
 
     openHotspotWindow: function() {
         if(this.data) {
@@ -170,12 +203,13 @@ pimcore.object.tags.hotspotimage = Class.create(pimcore.object.tags.image, {
 
         this.hotspots = [];
         this.marker = [];
+        this.crop = [];
         this.dirty = true;
         this.component.removeAll();
         this.createImagePanel();
     },
 
     getValue: function () {
-        return {image: this.data, hotspots: this.hotspots, marker: this.marker};
+        return {image: this.data, hotspots: this.hotspots, marker: this.marker, crop: this.crop};
     }
 });

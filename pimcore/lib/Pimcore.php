@@ -293,8 +293,11 @@ class Pimcore {
         if($conf) {
             // redirect php error_log to /website/var/log/php.log
             if($conf->general->custom_php_logfile) {
-                ini_set("error_log", PIMCORE_LOG_DIRECTORY . "/php.log");
-                ini_set("log_errors", "1");
+                $phpLog = PIMCORE_LOG_DIRECTORY . "/php.log";
+                if(is_writable($phpLog)) {
+                    ini_set("error_log", $phpLog);
+                    ini_set("log_errors", "1");
+                }
             }
         }
 
@@ -304,6 +307,38 @@ class Pimcore {
             }
         }
 
+        $prioMapping = array(
+            "debug" => Zend_Log::DEBUG,
+            "info" => Zend_Log::INFO,
+            "notice" => Zend_Log::NOTICE,
+            "warning" => Zend_Log::WARN,
+            "error" => Zend_Log::ERR,
+            "critical" => Zend_Log::CRIT,
+            "alert" => Zend_Log::ALERT,
+            "emergency" => Zend_Log::EMERG
+        );
+
+        $prios = array();
+
+        if($conf && $conf->general->loglevel) {
+            $prioConf = $conf->general->loglevel->toArray();
+            if(is_array($prioConf)) {
+                foreach ($prioConf as $level => $state) {
+                    if($state) {
+                        $prios[] = $prioMapping[$level];
+                    }
+                }
+            }
+        }
+        else {
+            // log everything if config isn't loaded (eg. at the installer)
+            foreach ($prioMapping as $p) {
+                $prios[] = $p;
+            }
+        }
+
+        Logger::setPriorities($prios);
+
         if (is_writable(PIMCORE_LOG_DEBUG)) {
             
             // check for big logfile, empty it if it's bigger than about 200M
@@ -312,42 +347,10 @@ class Pimcore {
                 file_put_contents(PIMCORE_LOG_DEBUG, ""); // create empty log
             }
 
-            $prioMapping = array(
-                "debug" => Zend_Log::DEBUG,
-                "info" => Zend_Log::INFO,
-                "notice" => Zend_Log::NOTICE,
-                "warning" => Zend_Log::WARN,
-                "error" => Zend_Log::ERR,
-                "critical" => Zend_Log::CRIT,
-                "alert" => Zend_Log::ALERT,
-                "emergency" => Zend_Log::EMERG
-            );
-
-            $prios = array();
-
-            if($conf && $conf->general->loglevel) {
-                $prioConf = $conf->general->loglevel->toArray();
-                if(is_array($prioConf)) {
-                    foreach ($prioConf as $level => $state) {
-                        if($state) {
-                            $prios[] = $prioMapping[$level];
-                        }
-                    }
-                }
-            }
-            else {
-                // log everything if config isn't loaded (eg. at the installer)
-                foreach ($prioMapping as $p) {
-                    $prios[] = $p;
-                }
-            }
-
             if(!empty($prios)) {
                 $writerFile = new Zend_Log_Writer_Stream(PIMCORE_LOG_DEBUG);
                 $loggerFile = new Zend_Log($writerFile);
                 Logger::addLogger($loggerFile);
-
-                Logger::setPriorities($prios);
             }
 
             $conf = Pimcore_Config::getSystemConfig();
@@ -371,6 +374,15 @@ class Pimcore {
                     }
                 }
             }
+        } else {
+            // try to use syslog instead
+            try {
+                $writerSyslog = new Zend_Log_Writer_Syslog(array('application' => 'pimcore'));
+                $loggerSyslog = new Zend_Log($writerSyslog);
+                Logger::addLogger($loggerSyslog);
+            } catch (\Exception $e) {
+
+            }
         }
     }
 
@@ -389,9 +401,6 @@ class Pimcore {
         error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT);
         //@ini_set("memory_limit", "1024M");
         @ini_set("max_execution_time", $maxExecutionTime);
-        @ini_set("short_open_tag", 1);
-        @ini_set("magic_quotes_gpc", 0);
-        @ini_set("magic_quotes_runtime", 0);
         set_time_limit($maxExecutionTime);
         mb_internal_encoding("UTF-8");
 
@@ -410,9 +419,14 @@ class Pimcore {
             Pimcore_Tool::exitWithError($m);
         }
 
-        if (get_magic_quotes_gpc()) {
-            $m = "pimcore requires magic_quotes_gpc OFF";
-            Pimcore_Tool::exitWithError($m);
+        if (version_compare(PHP_VERSION, '5.4.0', "<")) {
+            @ini_set("magic_quotes_gpc", 0);
+            @ini_set("magic_quotes_runtime", 0);
+
+            if (get_magic_quotes_gpc()) {
+                $m = "pimcore requires magic_quotes_gpc OFF";
+                Pimcore_Tool::exitWithError($m);
+            }
         }
     }
 
@@ -813,6 +827,10 @@ class Pimcore {
         $output = null;
         $contentEncoding = null;
 
+        if(headers_sent()) {
+            return $data;
+        }
+
         header("Connection: close\r\n");
 
         // check for supported content-encodings
@@ -881,7 +899,7 @@ class Pimcore {
         }
 
         if(strlen($output) > 0) {
-            // check here for existing content, otherwise readfile() and similar functions are not working anymore
+            // check here if there is actually content, otherwise readfile() and similar functions are not working anymore
             header("Content-Length: " . mb_strlen($output, "latin1"));
         }
         header("X-Powered-By: pimcore");

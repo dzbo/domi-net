@@ -32,12 +32,11 @@ class Schedule_Manager_Factory {
         }
 
         // force a specific type
-        if(in_array($type, $availableManagers)) {
-            Logger::info("Try to force type: " . $type);
-            $availableManagers = array($type);
+        if(!in_array($type, $availableManagers)) {
+            $type = "procedural";
         }
 
-        if(in_array("daemon", $availableManagers)) {
+        if($type == "daemon") {
             Logger::info("Using Schedule_Manager_Daemon as maintenance manager");
             $manager = new Schedule_Manager_Daemon($pidFile);
         } else {
@@ -47,20 +46,4 @@ class Schedule_Manager_Factory {
 
         return $manager;
     }
-    
-    
-    public static function cleanupOldPidFiles () {
-
-        $pidLifeTime = 86400;
-        
-        $files = scandir(PIMCORE_SYSTEM_TEMP_DIRECTORY);
-        foreach ($files as $file) {
-            if(is_file(PIMCORE_SYSTEM_TEMP_DIRECTORY . "/" . $file) && preg_match("/maintenance_(.*)\.pid$/",$file)) {
-                if(filemtime(PIMCORE_SYSTEM_TEMP_DIRECTORY . "/" . $file) < (time()-$pidLifeTime)) { // remove all pids older than 24 hours
-                    unlink(PIMCORE_SYSTEM_TEMP_DIRECTORY . "/" . $file);
-                }
-            }
-        }
-    }
-
 }

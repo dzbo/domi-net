@@ -15,7 +15,7 @@
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
-class Object_Abstract extends Pimcore_Model_Abstract implements Element_Interface {
+class Object_Abstract extends Element_Abstract {
 
     const OBJECT_TYPE_FOLDER = "folder";
     const OBJECT_TYPE_OBJECT = "object";
@@ -1176,7 +1176,7 @@ class Object_Abstract extends Pimcore_Model_Abstract implements Element_Interfac
         if ($this->o_properties === null) {
             // try to get from cache
             $cacheKey = "object_properties_" . $this->getId();
-            $cacheTags = $this->getCacheTags(array("properties"));
+            $cacheTags = $this->getCacheTags(array("properties" => "properties"));
 
             if (!$properties = Pimcore_Model_Cache::load($cacheKey)) {
                 $properties = $this->getResource()->getProperties();

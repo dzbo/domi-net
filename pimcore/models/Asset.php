@@ -15,7 +15,7 @@
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
-class Asset extends Pimcore_Model_Abstract implements Element_Interface {
+class Asset extends Element_Abstract {
 
     public static $chmod = 0766;
 
@@ -983,7 +983,7 @@ class Asset extends Pimcore_Model_Abstract implements Element_Interface {
         if ($this->properties === null) {
             // try to get from cache
             $cacheKey = "asset_properties_" . $this->getId();
-            $cacheTags = $this->getCacheTags(array("properties"));
+            $cacheTags = $this->getCacheTags(array("properties" => "properties"));
 
             if (!$properties = Pimcore_Model_Cache::load($cacheKey)) {
                 $properties = $this->getResource()->getProperties();

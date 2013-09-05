@@ -94,11 +94,6 @@ class Object_Class_Data_Image extends Object_Class_Data {
         return $this;
     }
 
-    public function getDefaultValue() {
-        return null;
-    }
-
-
     /**
      * @see Object_Class_Data::getDataForResource
      * @param Asset $data
@@ -177,10 +172,9 @@ class Object_Class_Data_Image extends Object_Class_Data {
      * @return string
      */
     public function getForCsvExport($object) {
-        $key = $this->getName();
-        $getter = "get".ucfirst($key);
-        if ($object->$getter() instanceof Element_Interface) {
-            return $object->$getter()->getFullPath();
+        $data = $this->getDataFromObjectParam($object);
+        if ($data instanceof Element_Interface) {
+            return $data->getFullPath();
         } else return null;
     }
 
@@ -243,10 +237,9 @@ class Object_Class_Data_Image extends Object_Class_Data {
      * @return mixed
      */
     public function getForWebserviceExport ($object) {
-        $key = $this->getName();
-        $getter = "get".ucfirst($key);
-        if($object->$getter() instanceof Asset){
-            return  $object->$getter()->getId();
+        $data = $this->getDataFromObjectParam($object);
+        if($data instanceof Asset){
+            return  $data->getId();
         }
     }
 
@@ -325,5 +318,30 @@ class Object_Class_Data_Image extends Object_Class_Data {
         } else {
             return "";
         }
+    }
+
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+        if($data instanceof Asset_Image) {
+            if(array_key_exists("asset", $idMapping) and array_key_exists($data->getId(), $idMapping["asset"])) {
+                return Asset::getById($idMapping["asset"][$data->getId()]);
+            }
+        }
+        return $data;
     }
 }

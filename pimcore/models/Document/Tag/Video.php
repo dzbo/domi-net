@@ -372,14 +372,6 @@ class Document_Tag_Video extends Document_Tag
         }
     }
 
-    protected function getScheme () {
-        if($this->view instanceof Zend_View && $this->view->getRequest()) {
-            return $this->view->getRequest()->getScheme();
-        } else {
-            return "https";
-        }
-    }
-
     public function getUrlCode()
     {
         return $this->getFlowplayerCode(array("mp4" => (string) $this->id));
@@ -420,7 +412,7 @@ class Document_Tag_Video extends Document_Tag
 
         // get youtube id
         $youtubeId = $this->id;
-        if(strpos($youtubeId, "http") === 0) {
+        if(strpos($youtubeId, "//") === 0) {
             $parts = parse_url($this->id);
             parse_str($parts["query"], $vars);
 
@@ -434,7 +426,7 @@ class Document_Tag_Video extends Document_Tag
                 $youtubeId = $explodedPath[array_search('embed',$explodedPath)+1];
             }
 
-            if(!$youtubeId && $parts["host"] == "youtu.be") {
+            if($parts["host"] == "youtu.be") {
                 $youtubeId = trim($parts["path"]," /");
             }
         }
@@ -504,7 +496,7 @@ class Document_Tag_Video extends Document_Tag
         }
 
         $code .= '<div id="pimcore_video_' . $this->getName() . '" class="pimcore_tag_video">
-            <iframe width="' . $width . '" height="' . $height . '" src="' . $this->getScheme() . '://www.youtube.com/embed/' . $youtubeId . '?wmode=transparent' . $additional_params .'" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+            <iframe width="' . $width . '" height="' . $height . '" src="//www.youtube.com/embed/' . $youtubeId . '?wmode=transparent' . $additional_params .'" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
         </div>';
 
         return $code;
@@ -521,7 +513,7 @@ class Document_Tag_Video extends Document_Tag
         $code = "";
         $uid = "video_" . uniqid();
 
-        // get youtube id
+        // get vimeo id
         $parts = parse_url($this->id);
         $pathParts = explode("/", $parts["path"]);
         $vimeoId = intval($pathParts[1]);
@@ -542,7 +534,7 @@ class Document_Tag_Video extends Document_Tag
         }
 
         $code .= '<div id="pimcore_video_' . $this->getName() . '" class="pimcore_tag_video">
-            <iframe src="' . $this->getScheme() . '://player.vimeo.com/video/' . $vimeoId . '?title=0&amp;byline=0&amp;portrait=0" width="' . $width . '" height="' . $height . '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+            <iframe src="//player.vimeo.com/video/' . $vimeoId . '?title=0&amp;byline=0&amp;portrait=0" width="' . $width . '" height="' . $height . '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
         </div>';
 
         return $code;
@@ -829,5 +821,42 @@ class Document_Tag_Video extends Document_Tag
             return $this->getVideoAsset()->getThumbnail($config);
         }
         return array();
+    }
+
+    /**
+     * @param mixed $id
+     * @return Document_Tag_Video
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return (int) $this->id;
+    }
+
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param array $idMapping
+     * @return void
+     */
+    public function rewriteIds($idMapping) {
+        if($this->type == "asset" && array_key_exists("asset", $idMapping) and array_key_exists($this->getId(), $idMapping["asset"])) {
+            $this->setId($idMapping["asset"][$this->getId()]);
+        }
     }
 }

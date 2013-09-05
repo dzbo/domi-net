@@ -498,9 +498,7 @@ class Object_Class_Data_Multihref extends Object_Class_Data_Relations_Abstract
      */
     public function getForCsvExport($object)
     {
-        $key = $this->getName();
-        $getter = "get" . ucfirst($key);
-        $data = $object->$getter();
+        $data = $this->getDataFromObjectParam($object);
         if (is_array($data)) {
             $paths = array();
             foreach ($data as $eo) {
@@ -609,10 +607,7 @@ class Object_Class_Data_Multihref extends Object_Class_Data_Relations_Abstract
      */
     public function getForWebserviceExport($object)
     {
-
-        $key = $this->getName();
-        $getter = "get" . ucfirst($key);
-        $data = $object->$getter();
+        $data = $this->getDataFromObjectParam($object);
         if (is_array($data)) {
             $items = array();
             foreach ($data as $eo) {
@@ -803,5 +798,26 @@ class Object_Class_Data_Multihref extends Object_Class_Data_Relations_Abstract
             return $this->getDataFromEditmode($result);
         }
         return;
+    }
+
+    /**
+     * Rewrites id from source to target, $idMapping contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param mixed $object
+     * @param array $idMapping
+     * @param array $params
+     * @return Element_Interface
+     */
+    public function rewriteIds($object, $idMapping, $params = array()) {
+        $data = $this->getDataFromObjectParam($object, $params);
+        $data = $this->rewriteIdsService($data, $idMapping);
+        return $data;
     }
 }

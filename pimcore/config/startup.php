@@ -69,7 +69,12 @@ $includePaths = array(
     PIMCORE_PATH . "/modules/deployment/models"
 );
 set_include_path(implode(PATH_SEPARATOR, $includePaths) . PATH_SEPARATOR);
-require_once PIMCORE_PATH . '/modules/deployment/config/startup.php';
+
+$deploymentStartup = PIMCORE_PATH . '/modules/deployment/config/startup.php';
+if(@is_file($deploymentStartup)) {
+    require_once($deploymentStartup);
+}
+
 // helper functions
 include(dirname(__FILE__) . "/helper.php");
 
@@ -102,6 +107,11 @@ foreach ($autoloaderClassMapFiles as $autoloaderClassMapFile) {
 $websiteStartup = PIMCORE_CONFIGURATION_DIRECTORY . "/startup.php";
 if(@is_file($websiteStartup)) {
     include_once($websiteStartup);
+}
+
+$composerStartup = PIMCORE_DOCUMENT_ROOT . "/vendor/autoload.php";
+if(@is_file($composerStartup)) {
+    include_once($composerStartup);
 }
 
 // on pimcore shutdown

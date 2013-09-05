@@ -185,11 +185,40 @@ class Asset_Service extends Element_Service {
      * @return Element_Interface
      */
     public static function loadAllFields (Element_Interface $element) {
+
+        $element->getProperties();
+
         if($element instanceof Asset && method_exists($element, "getData")) {
             $element->setData(null);
             $element->getData();
         }
 
         return $element;
+    }
+
+    /**
+     * Rewrites id from source to target, $rewriteConfig contains
+     * array(
+     *  "document" => array(
+     *      SOURCE_ID => TARGET_ID,
+     *      SOURCE_ID => TARGET_ID
+     *  ),
+     *  "object" => array(...),
+     *  "asset" => array(...)
+     * )
+     * @param $asset
+     * @param $rewriteConfig
+     * @return Asset
+     */
+    public static function rewriteIds($asset, $rewriteConfig) {
+
+        // rewriting properties
+        $properties = $asset->getProperties();
+        foreach ($properties as &$property) {
+            $property->rewriteIds($rewriteConfig);
+        }
+        $asset->setProperties($properties);
+
+        return $asset;
     }
 }

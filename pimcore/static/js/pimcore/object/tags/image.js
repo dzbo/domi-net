@@ -86,7 +86,7 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
         this.component = new Ext.Panel(conf);
 
 
-        this.component.on("render", function (el) {
+        this.component.on("afterrender", function (el) {
 
             // add drop zone
             new Ext.dd.DropZone(el.getEl(), {
@@ -103,12 +103,10 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
                     } else {
                         return Ext.dd.DropZone.prototype.dropNotAllowed;
                     }
-
                 },
 
                 onNodeDrop : this.onNodeDrop.bind(this)
             });
-
 
             el.getEl().on("contextmenu", this.onContextMenu.bind(this));
 
@@ -118,10 +116,8 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
 
         }.bind(this));
 
-
         return this.component;
     },
-
 
     getLayoutShow: function () {
 
@@ -141,7 +137,7 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
 
         this.component = new Ext.Panel(conf);
 
-        this.component.on("render", function (el) {
+        this.component.on("afterrender", function (el) {
             if (this.data) {
                 this.updateImage();
             }
@@ -151,6 +147,9 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
     },
 
     onNodeDrop: function (target, dd, e, data) {
+
+        this.empty();
+
         if (data.node.attributes.type == "image") {
             if(this.data != data.node.attributes.id) {
                 this.dirty = true;
@@ -174,6 +173,8 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
     uploadDialog: function () {
         pimcore.helpers.assetSingleUploadDialog(this.fieldConfig.uploadPath, "path", function (res) {
             try {
+                this.empty();
+
                 var data = Ext.decode(res.response.responseText);
                 if(data["id"] && data["type"] == "image") {
                     this.data = data["id"];
@@ -187,6 +188,9 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
     },
     
     addDataFromSelector: function (item) {
+
+        this.empty();
+
         if (item) {
             if(this.data != item.id) {
                 this.dirty = true;
@@ -206,12 +210,18 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
     },
     
     updateImage: function () {
-        var path = "/admin/asset/get-image-thumbnail/id/" + this.data + "/width/" + (this.fieldConfig.width - 20)
-                                                + "/height/" + (this.fieldConfig.height - 20) + "/contain/true";
+
+        // 5px padding (-10)
+        var width = this.getBody().getWidth()-10;
+        var height = this.getBody().getHeight()-10;
+
+        var path = "/admin/asset/get-image-thumbnail/id/" + this.data + "/width/" + width + "/height/" + height
+            + "/contain/true";
+
         this.getBody().setStyle({
             backgroundImage: "url(" + path + ")",
-            BackgroundPosition: "center center"
-
+            backgroundPosition: "center center",
+            backgroundRepeat: "no-repeat"
         });
         this.getBody().repaint();
     },
@@ -219,7 +229,7 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
     getBody: function () {
         // get the id from the body element of the panel because there is no method to set body's html
         // (only in configure)
-        var bodyId = Ext.get(this.component.getEl().dom).query(".x-panel-body")[0].getAttribute("id");
+        var bodyId = Ext.get(this.component.getEl().dom).query(".pimcore_droptarget_image")[0].getAttribute("id");
         return Ext.get(bodyId);
     },
 
@@ -249,6 +259,17 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
             }));
 
             if(this instanceof pimcore.object.tags.hotspotimage) {
+
+                menu.add(new Ext.menu.Item({
+                    text: t('select_specific_area_of_image'),
+                    iconCls: "pimcore_icon_image_region",
+                    handler: function (item) {
+                        item.parentMenu.destroy();
+
+                        this.openCropWindow();
+                    }.bind(this)
+                }));
+
                 menu.add(new Ext.menu.Item({
                     text: t('add_marker_or_hotspots'),
                     iconCls: "pimcore_icon_image_add_hotspot",

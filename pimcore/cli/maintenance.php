@@ -24,16 +24,23 @@ try {
         'help|h' => 'display this help'
     );
 
+    // parse existing valid arguments => needed to do not add them twice => see below (dynamic add)
+    $existingParams = array();
+    foreach ($optsConfig as $key => $value) {
+        foreach(explode("|",$key) as $v) {
+            $existingParams[] = $v;
+        }
+    }
+
     // dynamically add non recognized options to avoid error messages
-    // @ TODO the code below doesn't check if an option is already defined in $optsConfig
-    /*$arguments = $_SERVER['argv'];
+    $arguments = $_SERVER['argv'];
     array_shift($arguments);
     foreach ($arguments as $arg) {
-        $arg = preg_match("/\-\-?([a-zA-Z0-9]+)(=| )?/", $arg, $matches);
-        if(array_key_exists(1, $matches)) {
+        $arg = preg_match("/\-\-([a-zA-Z0-9]+)?(=| )?/", $arg, $matches);
+        if(array_key_exists(1, $matches) && !in_array($matches[1], $existingParams)) {
             $optsConfig[$matches[1]] = "custom parameter";
         }
-    }*/
+    }
 
     $opts = new Zend_Console_Getopt($optsConfig);
 
@@ -93,7 +100,6 @@ $manager->registerJob(new Schedule_Maintenance_Job("cleanuplogfiles", new Pimcor
 $manager->registerJob(new Schedule_Maintenance_Job("httperrorlog", new Pimcore_Log_Maintenance(), "httpErrorLogCleanup"));
 $manager->registerJob(new Schedule_Maintenance_Job("usagestatistics", new Pimcore_Log_Maintenance(), "usageStatistics"));
 $manager->registerJob(new Schedule_Maintenance_Job("sanitycheck", "Element_Service", "runSanityCheck"));
-$manager->registerJob(new Schedule_Maintenance_Job("cleanupoldpidfiles", "Schedule_Manager_Factory", "cleanupOldPidFiles"), true);
 $manager->registerJob(new Schedule_Maintenance_Job("versioncleanup", new Version(), "maintenanceCleanUp"));
 $manager->registerJob(new Schedule_Maintenance_Job("redirectcleanup", "Redirect", "maintenanceCleanUp"));
 $manager->registerJob(new Schedule_Maintenance_Job("cleanupbrokenviews", "Pimcore_Resource", "cleanupBrokenViews"));

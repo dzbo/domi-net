@@ -15,7 +15,7 @@
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
-class Tool_SqlReport_Config {
+class Tool_CustomReport_Config {
 
     /**
      * @var string
@@ -26,6 +26,11 @@ class Tool_SqlReport_Config {
      * @var string
      */
     public $sql = "";
+
+    /**
+     * @var string[]
+     */
+    public $dataSourceConfig = array();
 
     /**
      * @var array
@@ -58,8 +63,33 @@ class Tool_SqlReport_Config {
     public $menuShortcut;
 
     /**
+     * @var string
+     */
+    public $chartType;
+
+    /**
+     * @var string
+     */
+    public $pieColumn;
+
+    /**
+     * @var string
+     */
+    public $pieLabelColumn;
+
+    /**
+     * @var string
+     */
+    public $xAxis;
+
+    /**
+     * @var string|array
+     */
+    public $yAxis;
+
+    /**
      * @param $name
-     * @return Tool_SqlReport_Config
+     * @return Tool_CustomReport_Config
      * @throws Exception
      */
     public static function getByName ($name) {
@@ -95,6 +125,19 @@ class Tool_SqlReport_Config {
         $items = $arrayConfig["columnConfiguration"];
         $arrayConfig["columnConfiguration"] = array("columnConfiguration" => $items);
 
+        if($arrayConfig["dataSourceConfig"]) {
+            $configArray = array();
+            foreach($arrayConfig["dataSourceConfig"] as $config) {
+                $configArray[] = json_encode($config);
+            }
+            $arrayConfig["dataSourceConfig"] = array("dataSourceConfig" => $configArray);
+        } else {
+            $arrayConfig["dataSourceConfig"] = array("dataSourceConfig" => array());
+        }
+
+        $items = $arrayConfig["yAxis"];
+        $arrayConfig["yAxis"] = array("yAxis" => $items);
+
         $config = new Zend_Config($arrayConfig);
         $writer = new Zend_Config_Writer_Xml(array(
             "config" => $config,
@@ -121,6 +164,35 @@ class Tool_SqlReport_Config {
             }
         } else {
             $configArray["columnConfiguration"] = array("columnConfiguration" => array());
+        }
+
+        if(array_key_exists("dataSourceConfig",$configArray) && is_array($configArray["dataSourceConfig"])) {
+            $dataSourceConfig = array();
+            foreach($configArray["dataSourceConfig"] as $c) {
+                if($c) {
+                    $dataSourceConfig[] = json_decode($c);
+                }
+            }
+
+            $configArray["dataSourceConfig"] = $dataSourceConfig;
+        } else {
+            $configArray["dataSourceConfig"] = array();
+        }
+
+        if(array_key_exists("yAxis",$configArray) && is_array($configArray["yAxis"])) {
+            if(!is_array($configArray["yAxis"]["yAxis"])) {
+                $configArray["yAxis"] = array($configArray["yAxis"]["yAxis"]);
+            } else {
+                $configArray["yAxis"] = $configArray["yAxis"]["yAxis"];
+            }
+        }
+
+        // to preserve compatibility to older sql reports
+        if($configArray["sql"] && empty($configArray["dataSourceConfig"])) {
+            $legacy = new stdClass();
+            $legacy->type = "sql";
+            $legacy->sql = $configArray["sql"];
+            $configArray["dataSourceConfig"][] = $legacy;
         }
 
         foreach ($configArray as $key => $value) {
@@ -277,5 +349,101 @@ class Tool_SqlReport_Config {
         return $this->menuShortcut;
     }
 
+
+    /**
+     * @param \string[] $dataSourceConfig
+     */
+    public function setDataSourceConfig($dataSourceConfig)
+    {
+        $this->dataSourceConfig = $dataSourceConfig;
+    }
+
+    /**
+     * @return \string[]
+     */
+    public function getDataSourceConfig()
+    {
+        return $this->dataSourceConfig;
+    }
+
+    /**
+     * @param string $chartType
+     */
+    public function setChartType($chartType)
+    {
+        $this->chartType = $chartType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getChartType()
+    {
+        return $this->chartType;
+    }
+
+    /**
+     * @param string $pieColumn
+     */
+    public function setPieColumn($pieColumn)
+    {
+        $this->pieColumn = $pieColumn;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPieColumn()
+    {
+        return $this->pieColumn;
+    }
+
+    /**
+     * @param string $xAxis
+     */
+    public function setXAxis($xAxis)
+    {
+        $this->xAxis = $xAxis;
+    }
+
+    /**
+     * @return string
+     */
+    public function getXAxis()
+    {
+        return $this->xAxis;
+    }
+
+    /**
+     * @param array|string $yAxis
+     */
+    public function setYAxis($yAxis)
+    {
+        $this->yAxis = $yAxis;
+    }
+
+    /**
+     * @return array|string
+     */
+    public function getYAxis()
+    {
+        return $this->yAxis;
+    }
+
+    /**
+     * @param string $pieLabelColumn
+     */
+    public function setPieLabelColumn($pieLabelColumn)
+    {
+        $this->pieLabelColumn = $pieLabelColumn;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPieLabelColumn()
+    {
+        return $this->pieLabelColumn;
+    }
 
 }

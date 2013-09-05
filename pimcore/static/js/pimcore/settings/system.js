@@ -1028,6 +1028,11 @@ pimcore.settings.system = Class.create({
                                 name: 'assets.ghostscript',
                                 value: this.getValue("assets.ghostscript"),
                                 width: 300
+                            },{
+                                fieldLabel: t('absolute_path_to_libreoffice'),
+                                name: 'assets.libreoffice',
+                                value: this.getValue("assets.libreoffice"),
+                                width: 300
                             },
                             {
                                 fieldLabel: t('absolute_path_to_icc_rgb_profile') + " (imagick)",
@@ -1505,6 +1510,11 @@ pimcore.settings.system = Class.create({
 
             // add the language to the container, so that further settings for the language can be set (eg. fallback, ...)
             var container = Ext.getCmp("system.settings.general.languageConainer");
+            var lang = container.getComponent(language);
+            if(lang) {
+                return;
+            }
+
             container.add({
                 xtype: "fieldset",
                 itemId: language,
