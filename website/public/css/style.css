@@ -110,6 +110,7 @@ address {
 .navbar-nav>li>a {
   color: #fff;
   border-radius: 0px;
+  outline: 0;
 }
 
 .navbar-nav>li>a:hover, .navbar-nav>li>a:focus {
