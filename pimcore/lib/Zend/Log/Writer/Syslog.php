@@ -174,7 +174,7 @@ class Zend_Log_Writer_Syslog extends Zend_Log_Writer_Abstract
     {
         self::$_lastApplication = $this->_application;
         self::$_lastFacility    = $this->_facility;
-        openlog($this->_application, LOG_PID, $this->_facility);
+        @openlog($this->_application, LOG_PID, $this->_facility);
     }
 
     /**
