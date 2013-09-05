@@ -1,9 +1,15 @@
 /* Global styles */
 
 body {
-  font-family: Arial, Helvetica, sans-serif; 
-  font-size: 12px;
-  color: #282828;
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif; 
+  font-size: 16px;
+  color: #5c5959;
+}
+
+h1, h2, h3 {
+  margin-top: 20px;
+  margin-bottom: 40px;
+  color: #fe1111;
 }
 
 img {
@@ -25,9 +31,22 @@ footer {
   color: #b5afaf;
 }
 
+blockquote {
+  color: #999;
+  margin-top: 50px;
+}
+
+address {
+  margin-bottom: 50px;
+}
+
+.margined {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
 /* parallax */
 #parallax {
-  padding-top: 60px;
 }
 
 #p1 {
@@ -69,8 +88,16 @@ footer {
   border-right: solid 15px transparent;
 }
 
+.navbar-nav {
+  margin-top: 0;
+  margin-bottom: 0;
+  float: right;
+  width: initial !important;
+}
+
 .navbar-nav>li>a {
   color: #fff;
+  border-radius: 0px;
 }
 
 .navbar-nav>li>a:hover, .navbar-nav>li>a:focus {
@@ -78,8 +105,8 @@ footer {
 }
 
 #navbar .nav-logo {
-  height: 40px;
-  margin-top: 5px;
+  height: 35px;
+  margin-top: 7px;
   display: none;
 }
 
@@ -87,16 +114,60 @@ footer {
   display: block;
 }
 
+.nav>li {
+  display: inline-block;
+}
+
 .nav>li>a {
-  padding: 10px 20px;
+  padding: 15px 20px;
+}
+
+
+/* Language switch */
+.language-container {
+  height: 60px;
+}
+
+.language-switch {
+  list-style: none;
+  margin-right: 20px;
+  margin-top: -22px;
+}
+
+
+.language-switch li {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.language-switch a {
+  display: block;
+  width: 22px;
+}
+
+.language-switch a:hover img {
+  margin-top: 4px;
+}
+
+.language-switch a img {
+  width: 22px;
+  box-shadow: 0px 0px 4px 1px #888;
+  -moz-box-shadow: 0px 0px 4px 1px #888;
+  -webkit-box-shadow: 0px 0px 4px 1px #888;
+  display: block;
+  position: absolute;
 }
 
 /* Sections */
 section {
-  min-height: 700px;
+  min-height: 600px;
 }
 
-section.gray {
+section:first-of-type {
+  min-height: 500px;
+}
+
+.gray {
   background: #f7f5f2;
 }
 
@@ -115,5 +186,16 @@ section.gray {
   font-size: 14px;
 }
 
+.recommended a {
+  margin-left: 5px;
+}
 
+#map {
+  height: 400px;
+  margin-top: 30px;
+  border: 10px #fff solid;
+  box-shadow: 0px 0px 25px -7px;
+  -moz-box-shadow: 0px 0px 25px -7px;
+  -webkit-box-shadow: 0px 0px 25px -7px;
+}
 

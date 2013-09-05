@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(function() {
   $('.sticky-navigation').waypoint('sticky');
 
   // Cache selectors

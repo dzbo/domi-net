@@ -1,6 +1,39 @@
-<footer class="row">
-  <div class="col-lg-12">
-    &copy; <?php echo date('Y')?> <?php echo $this->translate('copyright') ?>
+<footer class="gray">
+  <div class="container">
+    <div class="row margined">
+      <div class="col-lg-4 text-left">
+        &copy; <?php echo date('Y')?> <?php echo $this->translate('copyright') ?>
+      </div>
+      <div class="col-lg-8 text-right recommended">
+        <?php echo $this->input('recommend', array("width" => 100))?>
+
+        <?php while($this->block("recommendedBlock")->loop()) { ?>
+          <?php
+          $link = $this->link("recommended_link");
+          $image = $this->image("recommended_image", array(
+            "title" => "",
+            "width" => 25,
+            "height" => 25,
+            "thumbnail" => array(
+              "width" => 25,
+              "height" => 25,
+              "interlace" => true,
+              "quality" => 90
+            ),
+            "highResolution" => 2
+          ));
+          ?>
+
+          <?php if ($this->editmode) { ?>
+              <?php echo $this->link("recommended_link"); ?>
+              <?php echo $this->image("recommended_image"); ?>
+          <?php } else { ?>
+              <a title="<?php echo $link->getTitle()?>" class="" target="<?php echo $link->getTarget()?>" href="<?php echo $link->getHref()?>"><?php echo $image; ?></a>
+          <?php } ?>
+        <?php } ?>
+
+      </div>
+    </div>
   </div>
 </footer>
 
@@ -8,6 +41,8 @@
 <script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="/<?php echo $this->baseUrl()?>website/public/js/waypoints.js"></script>
 <script type="text/javascript" src="/<?php echo $this->baseUrl()?>website/public/js/waypoints-sticky.js"></script>
+<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=AIzaSyAtj3ugUBGg2QDOaSjnzDvcJCH9fXETnPw"></script>
+<script type="text/javascript" src="/<?php echo $this->baseUrl()?>website/public/js/map.js"></script>
 <script type="text/javascript" src="/<?php echo $this->baseUrl()?>website/public/js/nav.js"></script>
 <script type="text/javascript" src="/<?php echo $this->baseUrl()?>website/public/js/custom.js"></script>
 
