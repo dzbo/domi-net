@@ -47,6 +47,7 @@ address {
 
 /* parallax */
 #parallax {
+  position: relative;
 }
 
 #p1 {
@@ -55,6 +56,17 @@ address {
   background-size: 2880px 505px;
   width: 100%;
 }
+
+#p2 {
+  background: url('../img/reflex.png') 69% 0px no-repeat;
+  height: 346px;
+  background-size: 457px 346px;
+  width: 100%;
+  position: absolute;
+  top: 2px;
+  display: none;
+}
+
 
 /* Nav */
 .sticky-navigation.stuck {

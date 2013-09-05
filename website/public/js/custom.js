@@ -11,4 +11,13 @@ $(function() {
   // contact map
   load_map("<b>Domi-Net</b><br />ul.Kwiatkowskiego 7/38, Częstochowa, Poland", 50.82805, 19.10644);
 
+  // parallax
+  $('#p2').parallax({
+    mouseport: $("body"),
+    xparallax: '100px'
+  });
+  setTimeout(function() {
+    $('#p2').fadeIn(1000);
+  }, 1300);
+
 });
