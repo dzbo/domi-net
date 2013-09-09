@@ -22,7 +22,10 @@
 
 }
 
-/* 640 x 480 */
-@media (max-width: 500px) {
-
+/* 320 x 480 */
+@media (max-width: 350px) {
+  #intro img {
+    height: initial;
+    width: 250px;
+  }
 }
