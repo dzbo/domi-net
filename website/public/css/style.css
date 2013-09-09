@@ -212,3 +212,7 @@ section:first-of-type {
   -webkit-box-shadow: 0px 0px 25px -7px;
 }
 
+#preview {
+  width: 100%;
+}
+
