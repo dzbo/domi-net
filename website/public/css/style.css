@@ -125,7 +125,7 @@ address {
   color: #f4f4f4;
 }
 
-#navbar .nav-logo {
+#navbar [class*='nav-logo'] {
   height: 35px;
   margin-top: 7px;
   display: none;

@@ -1,4 +1,5 @@
 @media (max-width: 1600px) {
+
   #p1 {
     height: 250px;
     background-size: 1710px 300px;
@@ -22,10 +23,27 @@
 
 }
 
+/* 480 x 320 */
+@media (max-width: 500px) {
+
+  #navbar.stuck .nav-logo {
+    display: none;
+  }
+
+  #navbar.stuck .nav-logo-small {
+    display: block;
+  }
+}
+
 /* 320 x 480 */
 @media (max-width: 350px) {
+
   #intro img {
     height: initial;
     width: 250px;
+  }
+
+  .nav>li>a {
+    padding: 15px 10px;
   }
 }
