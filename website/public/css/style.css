@@ -31,6 +31,14 @@ footer {
   color: #b5afaf;
 }
 
+footer [class*='col-lg-'] {
+  margin-top: 10px;
+}
+
+footer .margined {
+  margin-top: 20px;
+}
+
 blockquote {
   color: #999;
   margin-top: 50px;
