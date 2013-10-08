@@ -9,10 +9,43 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
+
+function gzcompressfile($source,$level=null, $target = null){
+    // this is a very memory efficient way of gzipping files
+    if($target) {
+        $dest = $target;
+    } else {
+        $dest = $source.'.gz';
+    }
+
+    $mode='wb'.$level;
+    $error=false;
+    if($fp_out=gzopen($dest,$mode)){
+        if($fp_in=fopen($source,'rb')){
+            while(!feof($fp_in))
+                gzwrite($fp_out,fread($fp_in,1024*512));
+            fclose($fp_in);
+        }
+        else $error=true;
+        gzclose($fp_out);
+    }
+    else $error=true;
+    if($error) return false;
+    else return $dest;
+}
+
+function is_json($string) {
+    if(is_string($string)) {
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
+    } else {
+        return false;
+    }
+}
 
 function foldersize($path) {
     $total_size = 0;

@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Tool
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
@@ -203,6 +203,35 @@ class Tool_CustomReport_Config {
         }
 
         return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getReportsList () {
+        $dir = Tool_CustomReport_Config::getWorkingDir();
+
+        $reports = array();
+        $files = scandir($dir);
+        foreach ($files as $file) {
+            if(strpos($file, ".xml")) {
+                $name = str_replace(".xml", "", $file);
+                $reports[] = array(
+                    "id" => $name,
+                    "text" => $name
+                );
+            }
+        }
+
+        return $reports;
+
+    }
+
+    public function getAdapter($configuration, $fullConfig = null) {
+
+        $type = $configuration->type ? ucfirst($configuration->type) : 'Sql';
+        $adapter = "Tool_CustomReport_Adapter_{$type}";
+        return new $adapter($configuration, $fullConfig);
     }
 
     /**

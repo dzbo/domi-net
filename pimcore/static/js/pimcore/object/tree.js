@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -331,7 +331,7 @@ pimcore.object.tree = Class.create({
                 tmpMenuEntry = {
                     text: groupName,
                     iconCls: "pimcore_icon_folder",
-                    handler: this.attributes.reference.addObject.bind(this, classGroups[groupName][0].get("id"), classGroups[groupName][0].get("text")),
+                    hideOnClick: false,
                     menu: {
                         items: []
                     }
@@ -527,7 +527,7 @@ pimcore.object.tree = Class.create({
         }
 
         if (!isVariant) {
-            if (this.id != 1) {
+            if (this.id != 1 && this.attributes.permissions.view) {
                 menu.add(new Ext.menu.Item({
                     text: t('copy'),
                     iconCls: "pimcore_icon_copy",
@@ -536,7 +536,7 @@ pimcore.object.tree = Class.create({
             }
 
             //cut
-            if (this.id != 1 && !this.attributes.locked) {
+            if (this.id != 1 && !this.attributes.locked && this.attributes.permissions.rename) {
                 menu.add(new Ext.menu.Item({
                     text: t('cut'),
                     iconCls: "pimcore_icon_cut",
@@ -546,8 +546,8 @@ pimcore.object.tree = Class.create({
         }
 
         //publish
-        if (this.attributes.permissions.publish && this.attributes.type != "folder") {
-            if (this.attributes.published && this.attributes.permissions.unpublish && !this.attributes.locked) {
+        if (this.attributes.type != "folder" && !this.attributes.locked) {
+            if (this.attributes.published && this.attributes.permissions.unpublish) {
                 menu.add(new Ext.menu.Item({
                     text: t('unpublish'),
                     iconCls: "pimcore_icon_tree_unpublish",

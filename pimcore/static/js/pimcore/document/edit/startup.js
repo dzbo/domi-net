@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -115,6 +115,14 @@ Ext.onReady(function () {
             }
         }
 
+        // add lazyload styles
+        // this is necessary, because otherwise ext will overwrite many default styles (reset.css)
+        // and then the style detection of eg. input, textarea editable isn't accurate anymore
+        Ext.each(Ext.query("link[type='pimcore-lazyload-style']"), function (item) {
+            item.setAttribute("type", "text/css");
+            item.setAttribute("rel", "stylesheet");
+        });
+
         // handler for Esc
         var mapEsc = new Ext.KeyMap(document, {
             key: [27],
@@ -124,24 +132,10 @@ Ext.onReady(function () {
             stopEvent: true
         });
 
-        // handler for STRG+S
-        var mapCtrlS = new Ext.KeyMap(document, {
-            key: "s",
-            fn: parent.pimcore.helpers.handleCtrlS,
-            ctrl:true,
-            alt: false,
-            shift:false,
-            stopEvent: true
-        });
-    
-        // handler for F5
-        var mapF5 = new Ext.KeyMap(document, {
-            key: [116],
-            fn: parent.pimcore.helpers.handleF5,
-            stopEvent: true
-        });
+        // register the global key bindings
+        pimcore.helpers.registerKeyBindings(document, Ext);
 
-        
+
         // add contextmenu note in help tool-tips
         var editablesForTooltip = Ext.query(".pimcore_editable");
         var tmpEl;

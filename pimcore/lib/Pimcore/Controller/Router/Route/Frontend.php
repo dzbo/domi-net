@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -485,7 +485,7 @@ class Pimcore_Controller_Router_Route_Frontend extends Zend_Controller_Router_Ro
                         $target = $redirect->getTarget();
                         if(is_numeric($target)){
                             $d = Document::getById($target);
-                            if($d instanceof Document_Page){
+                            if($d instanceof Document_Page || $d instanceof Document_Link || $d instanceof Document_Hardlink) {
                                 $target = $d->getFullPath();
                             } else {
                                 Logger::error("Target of redirect no found (Document-ID: " . $target . ")!");

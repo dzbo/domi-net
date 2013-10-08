@@ -109,9 +109,7 @@ $scriptLibs = array(
     // library
     "lib/prototype-light.js",
     "lib/jquery.min.js",
-    "lib/jquery.color.js",
     $scriptExtAdapter,
-
     $scriptExt,
 
     "lib/ext-plugins/Notification/Ext.ux.Notification.js",
@@ -424,6 +422,7 @@ $scripts = array(
     "pimcore/report/custom/settings.js",
     "pimcore/report/custom/report.js",
     "pimcore/report/custom/definitions/sql.js",
+    "pimcore/report/custom/definitions/analytics.js",
 
     "pimcore/settings/tagmanagement/panel.js",
     "pimcore/settings/tagmanagement/item.js",
@@ -450,6 +449,7 @@ $scripts = array(
     "pimcore/layout/portlets/modificationStatistic.js",
     "pimcore/layout/portlets/feed.js",
     "pimcore/layout/portlets/analytics.js",
+    "pimcore/layout/portlets/customreports.js",
 
     "pimcore/layout/toolbar.js",
     "pimcore/layout/treepanelmanager.js",

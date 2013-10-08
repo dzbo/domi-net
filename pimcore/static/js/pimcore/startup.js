@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -292,14 +292,14 @@ Ext.onReady(function () {
     }
 
     // check for flash player
-    if (!swfobject.hasFlashPlayerVersion("10.1")) {
+    if (!swfobject.hasFlashPlayerVersion("11")) {
         statusbar.add('<div class="pimcore_statusbar_flash">' + t("update_flash") + "</div>");
         statusbar.add("-");
     }
 
     statusbar.add("->");
-    statusbar.add('powered by <a href="http://www.pimcore.org/" target="_blank" style="color:#fff;">'
-                + 'pimcore</a> - Version: ' + pimcore.settings.version + " (Build: " + pimcore.settings.build + ")");
+    statusbar.add('&copy by <a href="http://www.pimcore.org/" target="_blank" style="color:#fff;">'
+                + 'pimcore GmbH</a> - pimcore Version: ' + pimcore.settings.version + " (Build: " + pimcore.settings.build + ")");
 
     if (!empty(pimcore.settings.liveconnectToken)) {
         pimcore.settings.liveconnect.setToken(pimcore.settings.liveconnectToken);
@@ -476,60 +476,7 @@ Ext.onReady(function () {
     // NOTE: the event pimcoreReady is fired in pimcore.layout.treepanelmanager
     pimcore.layout.treepanelmanager.startup();
 
-    // handler for STRG+S (Save&Publish)
-    var mapCtrlS = new Ext.KeyMap(document, {
-        key:"s",
-        fn:pimcore.helpers.handleCtrlS,
-        ctrl:true,
-        alt:false,
-        shift:false,
-        stopEvent:true
-    });
-
-    // handler for F5
-    mapF5 = new Ext.KeyMap(document, {
-        key:[116],
-        fn:pimcore.helpers.handleF5,
-        stopEvent:true
-    });
-
-    var openAssetById = new Ext.KeyMap(document, {
-        key:"a",
-        fn:pimcore.helpers.openElementByIdDialog.bind(this, "asset"),
-        ctrl:true,
-        alt:false,
-        shift:true,
-        stopEvent:true
-    });
-
-    var openObjectById = new Ext.KeyMap(document, {
-        key:"o",
-        fn:pimcore.helpers.openElementByIdDialog.bind(this, "object"),
-        ctrl:true,
-        alt:false,
-        shift:true,
-        stopEvent:true
-    });
-
-    var openDocumentById = new Ext.KeyMap(document, {
-        key:"d",
-        fn:pimcore.helpers.openElementByIdDialog.bind(this, "document"),
-        ctrl:true,
-        alt:false,
-        shift:true,
-        stopEvent:true
-    });
-
-    var openDocumentByPath = new Ext.KeyMap(document, {
-        key:"f",
-        fn:pimcore.helpers.openDocumentByPathDialog,
-        ctrl:true,
-        alt:false,
-        shift:true,
-        stopEvent:true
-    });
-
-
+    pimcore.helpers.registerKeyBindings(document);
 });
 
 

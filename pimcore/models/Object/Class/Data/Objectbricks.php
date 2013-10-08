@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Object_Class
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -763,9 +763,11 @@ class Object_Class_Data_Objectbricks extends Object_Class_Data
                 }
 
                 foreach ($collectionDef->getFieldDefinitions() as $fd) {
-                    $d = $fd->rewriteIds($item, $idMapping, $params);
-                    $setter = "set" . ucfirst($fd->getName());
-                    $item->$setter($d);
+                    if(method_exists($fd, "rewriteIds")) {
+                        $d = $fd->rewriteIds($item, $idMapping, $params);
+                        $setter = "set" . ucfirst($fd->getName());
+                        $item->$setter($d);
+                    }
                 }
             }
         }

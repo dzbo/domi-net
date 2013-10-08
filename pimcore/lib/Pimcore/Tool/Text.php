@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -306,6 +306,14 @@ class Pimcore_Tool_Text
         }
 
         return $tags;
+    }
+
+    public static function convertToUTF8($text) {
+        $encoding = Pimcore_Tool_Text::detectEncoding($text);
+        if ($encoding) {
+            $text = iconv($encoding, "UTF-8", $text);
+        }
+        return $text;
     }
 
     public static function detectEncoding($text)

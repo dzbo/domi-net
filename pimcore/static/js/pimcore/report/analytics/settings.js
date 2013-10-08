@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -145,10 +145,16 @@ pimcore.report.analytics.settings = Class.create({
                         displayField: 'name',
                         store: new Ext.data.JsonStore({
                             autoDestroy: true,
+                            autoLoad: true,
                             url: "/admin/reports/analytics/get-profiles",
                             root: "data",
                             idProperty: "id",
-                            fields: ["name","id","trackid","accountid","internalid"]
+                            fields: ["name","id","trackid","accountid","internalid"],
+                            listeners: {
+                                load: function() {
+                                    Ext.getCmp("report_settings_analytics_profile_" + id).setValue(this.parent.getValue("analytics.sites." + key + ".profile"));
+                                }.bind(this, id)
+                            }
                         }),
                         listeners: {
                             "select": function (id, el, record, index) {

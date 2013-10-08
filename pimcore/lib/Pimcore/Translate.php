@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -119,7 +119,16 @@ class Pimcore_Translate extends Zend_Translate_Adapter {
         // list isn't cacheable, just get a single item
         if(!$this->isCacheable) {
             $backend = self::getBackend();
-            return $backend::getByKeyLocalized($messageIdOriginal, true, true, $locale);
+            $translation = $backend::getByKeyLocalized($messageIdOriginal, true, true, $locale);
+            if($translation == $messageIdOriginal) {
+                foreach(Pimcore_Tool::getFallbackLanguagesFor($locale) as $fallbackLanguage) {
+                    $translation = $backend::getByKeyLocalized($messageIdOriginal, true, true, $fallbackLanguage);
+                    if($translation != $messageIdOriginal) {
+                        break;
+                    }
+                }
+            }
+            return $translation;
         }
 
         if(empty($this->_translate[$locale])) {

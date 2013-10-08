@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Element
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
@@ -124,10 +124,12 @@ class Element_Recyclebin_Item extends Pimcore_Model_Abstract {
         $loadChildren = true;
 
         if($this->getElement() instanceof Asset_Folder) {
-            $size = foldersize($this->getElement()->getFileSystemPath());
-            $limit = filesize2bytes(ini_get("memory_limit") . "B") / 2;
-            if($size > $limit) {
-                $loadChildren = false; // do not load children, it's simply too big
+            if(is_dir($this->getElement()->getFileSystemPath())) {
+                $size = foldersize($this->getElement()->getFileSystemPath());
+                $limit = filesize2bytes(ini_get("memory_limit") . "B") / 2;
+                if($size > $limit) {
+                    $loadChildren = false; // do not load children, it's simply too big
+                }
             }
         }
 
@@ -177,9 +179,17 @@ class Element_Recyclebin_Item extends Pimcore_Model_Abstract {
     public function loadChilds (Element_Interface $element) {
         
         $this->amount++;
-        
+
+        // not sure anymore why this is needed, but anyway, it doesn't matter here
+        if ($element instanceof Asset) {
+            if(!$element instanceof Asset_Folder) {
+                $element->setData(null);
+            }
+        }
+
         Element_Service::loadAllFields($element);
-        
+
+
         // for all
         $element->getProperties();
         if(method_exists($element,"getScheduledTasks")) {

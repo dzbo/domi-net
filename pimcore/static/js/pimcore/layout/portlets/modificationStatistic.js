@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -27,7 +27,7 @@ pimcore.layout.portlets.modificationStatistic = Class.create(pimcore.layout.port
         return "pimcore_icon_portlet_modification_statistic";
     },
 
-    getLayout: function () {
+    getLayout: function (portletId) {
 
         var store = new Ext.data.JsonStore({
             autoDestroy: true,
@@ -84,6 +84,7 @@ pimcore.layout.portlets.modificationStatistic = Class.create(pimcore.layout.port
             items: [panel]
         }));
 
+        this.layout.portletId = portletId;
         return this.layout;
     }
 });

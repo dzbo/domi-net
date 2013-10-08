@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -42,6 +42,10 @@ pimcore.document.tags.input = Class.create(pimcore.document.tag, {
             if(!options["height"]) {
                 styles["height"] = "auto";
             }
+            if(styles["font-size"] == "0px") {
+                delete styles["font-size"];
+            }
+
             this.element.getEl().applyStyles(styles);
 
             // necessary for IE9

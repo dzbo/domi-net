@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Document
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -412,7 +412,7 @@ class Document_Tag_Video extends Document_Tag
 
         // get youtube id
         $youtubeId = $this->id;
-        if(strpos($youtubeId, "//") === 0) {
+        if(strpos($youtubeId, "//") !== false) {
             $parts = parse_url($this->id);
             parse_str($parts["query"], $vars);
 

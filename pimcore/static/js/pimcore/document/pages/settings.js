@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -556,31 +556,39 @@ pimcore.document.pages.settings = Class.create({
                                                 }
                                             }.bind(this));
                                     }.bind(this)
-                                },
-                                    {
-                                        text:t("delete_master_document"),
-                                        iconCls:"pimcore_icon_delete",
-                                        autoWidth:true,
-                                        handler:function () {
-                                            Ext.MessageBox.confirm(t("are_you_sure"), t("all_content_will_be_lost"),
-                                                function (buttonValue) {
-                                                    if (buttonValue == "yes") {
-                                                        Ext.getCmp("contentMasterDocumentPath_"
-                                                                                        + this.page.id).setValue("");
-                                                        Ext.Ajax.request({
-                                                            url:"/admin/page/change-master-document/id/"
-                                                                                        + this.page.id,
-                                                            params:{
-                                                                contentMasterDocumentPath:""
-                                                            },
-                                                            success:function () {
-                                                                this.page.reload();
-                                                            }.bind(this)
-                                                        });
-                                                    }
-                                                }.bind(this));
-                                        }.bind(this)
-                                    }]
+                                },{
+                                    text:t("delete_master_document"),
+                                    iconCls:"pimcore_icon_delete",
+                                    autoWidth:true,
+                                    handler:function () {
+                                        Ext.MessageBox.confirm(t("are_you_sure"), t("all_content_will_be_lost"),
+                                            function (buttonValue) {
+                                                if (buttonValue == "yes") {
+                                                    Ext.getCmp("contentMasterDocumentPath_"
+                                                                                    + this.page.id).setValue("");
+                                                    Ext.Ajax.request({
+                                                        url:"/admin/page/change-master-document/id/"
+                                                                                    + this.page.id,
+                                                        params:{
+                                                            contentMasterDocumentPath:""
+                                                        },
+                                                        success:function () {
+                                                            this.page.reload();
+                                                        }.bind(this)
+                                                    });
+                                                }
+                                            }.bind(this));
+                                    }.bind(this)
+                                }, {
+                                    text: t("open_master_document"),
+                                    iconCls: "pimcore_icon_edit",
+                                    autoWidth: true,
+                                    handler: function () {
+                                        var masterPath = Ext.getCmp("contentMasterDocumentPath_" + this.page.id).getValue();
+                                        console.log(masterPath);
+                                        pimcore.helpers.openDocumentByPath(masterPath);
+                                    }.bind(this)
+                                }]
                             }
                         ]
                     }

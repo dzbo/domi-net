@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -81,14 +81,16 @@ pimcore.tool.paralleljobs = Class.create({
                 success: function (response) {
 
                     try {
-                        response = Ext.decode(response.responseText);
-                        if(!response.success) {
+                        var res = Ext.decode(response.responseText);
+                        if(!res["success"]) {
                             // if the download fails, stop all activity
-                            throw response;
+                            throw res;
                         }
                     } catch (e) {
                         clearInterval(this.jobsInterval);
-                        this.error(response.message);
+                        console.log(e);
+                        console.log(response);
+                        this.error( (res && res["message"]) ? res["message"] : response.responseText);
                         return;
                     }
 

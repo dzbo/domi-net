@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -28,12 +28,15 @@ pimcore.layout.portlets.feed = Class.create(pimcore.layout.portlets.abstract, {
         return "pimcore_icon_portlet_feed";
     },
 
-    getLayout: function () {
-
+    getLayout: function (portletId) {
 
         this.store = new Ext.data.JsonStore({
             autoDestroy: true,
             url: '/admin/portal/portlet-feed',
+            baseParams: {
+                key: this.portal.key,
+                id: portletId
+            },
             root: 'entries',
             fields: ['id','title',"description",'date',"link","content"]
         });
@@ -72,6 +75,7 @@ pimcore.layout.portlets.feed = Class.create(pimcore.layout.portlets.abstract, {
             items: [grid]
         }));
 
+        this.layout.portletId = portletId;
         return this.layout;
     },
 
@@ -91,16 +95,20 @@ pimcore.layout.portlets.feed = Class.create(pimcore.layout.portlets.abstract, {
                             name: "url",
                             id: "pimcore_portlet_feed_url",
                             fieldLabel: "Feed-URL",
+                            value: this.config,
                             width: 420
                         },
                         {
                             xtype: "button",
                             text: t("save"),
                             handler: function () {
+                                this.config = Ext.getCmp("pimcore_portlet_feed_url").getValue();
                                 Ext.Ajax.request({
-                                    url: "/admin/portal/portlet-feed-save",
+                                    url: "/admin/portal/update-portlet-config",
                                     params: {
-                                        url: Ext.getCmp("pimcore_portlet_feed_url").getValue()
+                                        key: this.portal.key,
+                                        id: this.layout.portletId,
+                                        config: Ext.getCmp("pimcore_portlet_feed_url").getValue()
                                     },
                                     success: function () {
                                         this.store.reload();

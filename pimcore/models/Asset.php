@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Asset
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -278,15 +278,15 @@ class Asset extends Element_Abstract {
      * @param array $data
      * @return Asset
      */
-    public static function create($parentId, $data = array()) {
+    public static function create($parentId, $data = array(), $save = true) {
 
         // create already the real class for the asset type, this is especially for images, because a system-thumbnail
         // (tree) is generated immediately after creating an image
         $class = "Asset";
         if(array_key_exists("filename", $data) && array_key_exists("data", $data)) {
-            $tmpFile = PIMCORE_SYSTEM_TEMP_DIRECTORY . "/asset-create-tmp-file-" . md5($data["data"]) . ".tmp";
+            $tmpFile = PIMCORE_SYSTEM_TEMP_DIRECTORY . "/asset-create-tmp-file-" . uniqid() . "." . Pimcore_File::getFileExtension($data["filename"]);
             file_put_contents($tmpFile, $data["data"]);
-            $mimeType = MIME_Type::autoDetect($tmpFile);
+            $mimeType = Pimcore_Tool_Mime::detect($tmpFile);
             unlink($tmpFile);
             $type = self::getTypeFromMimeMapping($mimeType, $data["filename"]);
             $class = "Asset_" . ucfirst($type);
@@ -297,12 +297,11 @@ class Asset extends Element_Abstract {
         foreach ($data as $key => $value) {
             $asset->setValue($key, $value);
         }
-        $asset->save();
 
-        // get concrete type of asset
-        Zend_Registry::set("asset_" . $asset->getId(), null);
-        $asset = self::getById($asset->getId());
-        Zend_Registry::set("asset_" . $asset->getId(), $asset);
+        if($save) {
+            $asset->save();
+        }
+
 
         return $asset;
     }
@@ -542,8 +541,11 @@ class Asset extends Element_Abstract {
 
         // create foldertree
         $destinationPath = $this->getFileSystemPath();
-        if (!is_dir(dirname($destinationPath))) {
-            mkdir(dirname($destinationPath), self::$chmod, true);
+
+        $dirPath = dirname($destinationPath);
+        if (!is_dir($dirPath)) {
+            mkdir($dirPath, self::$chmod, true);
+            chmod($dirPath, self::$chmod);
         }
 
         if ($this->getType() != "folder") {
@@ -566,7 +568,7 @@ class Asset extends Element_Abstract {
 
             // set mime type
 
-            $mimetype = MIME_Type::autoDetect($this->getFileSystemPath());
+            $mimetype = Pimcore_Tool_Mime::detect($this->getFileSystemPath());
             $this->setMimetype($mimetype);
 
             // set type
@@ -788,6 +790,15 @@ class Asset extends Element_Abstract {
     }
 
     public function clearDependentCache($additionalTags = array()) {
+
+        // get concrete type of asset
+        // this is important because at the time of creating an asset it's not clear which type (resp. class) it will have
+        // the type (image, document, ...) depends on the mime-type
+        Zend_Registry::set("asset_" . $this->getId(), null);
+        $asset = self::getById($this->getId());
+        Zend_Registry::set("asset_" . $this->getId(), $asset);
+
+
         try {
             $tags = array("asset_" . $this->getId(), "properties", "output");
             $tags = array_merge($tags, $additionalTags);
@@ -969,7 +980,36 @@ class Asset extends Element_Abstract {
         return $this;
     }
 
+    /**
+     * @param string $type
+     * @return null|string
+     */
+    public function getChecksum($type = "md5") {
+        $file = $this->getFileSystemPath();
+        if(is_file($file)) {
+            if($type == "md5") {
+                return md5_file($file);
+            } else if ($type = "sha1") {
+                return sha1_file($file);
+            } else {
+                throw new \Exception("hashing algorithm '" . $type . "' isn't supported");
+            }
+        }
 
+        return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getDataChanged() {
+        return $this->_dataChanged;
+    }
+
+    /**
+     * @param bool $changed
+     * @return $this
+     */
     public function setDataChanged ($changed = true) {
         $this->_dataChanged = $changed;
         return $this;

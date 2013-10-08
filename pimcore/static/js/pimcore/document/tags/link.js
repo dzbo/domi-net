@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -239,7 +239,7 @@ pimcore.document.tags.link = Class.create(pimcore.document.tag, {
             text = this.data.text;
         }
         if (this.data.path) {
-            return '<a href="' + this.data.path + '">' + text + '</a>';
+            return '<a href="' + this.data.path + '" class="' + this.options["class"] + ' ' + this.data["class"] + '">' + text + '</a>';
         }
         return text;
     },

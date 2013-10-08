@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -75,10 +75,12 @@ pimcore.object.tags.hotspotimage = Class.create(pimcore.object.tags.image, {
                 text: "<b>" + this.fieldConfig.title + "</b>"
             },"->",{
                 xtype: "button",
+                tooltip: t("crop"),
                 iconCls: "pimcore_icon_image_region",
                 handler: this.openCropWindow.bind(this)
             },{
                 xtype: "button",
+                tooltip: t("add_marker_or_hotspots"),
                 iconCls: "pimcore_icon_image_add_hotspot",
                 handler: this.openHotspotWindow.bind(this)
             },{

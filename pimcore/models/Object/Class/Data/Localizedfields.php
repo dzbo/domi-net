@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Object_Class
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -200,6 +200,8 @@ class Object_Class_Data_Localizedfields extends Object_Class_Data
      */
     public function getVersionPreview($data)
     {
+        // this is handled directly in the template
+        // /pimcore/modules/admin/views/scripts/object/preview-version.php
         return "LOCALIZED FIELDS";
     }
 

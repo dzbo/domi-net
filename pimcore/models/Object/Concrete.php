@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Object
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
@@ -612,7 +612,7 @@ class Object_Concrete extends Object_Abstract {
 
             list($value, $limit, $offset) = $arguments;
 
-            $defaultCondition = $propertyName . " = '" . $value . "' ";
+            $defaultCondition = $propertyName . " = " . Pimcore_Resource::get()->quote($value) . " ";
             $listConfig = array(
                 "condition" => $defaultCondition
             );

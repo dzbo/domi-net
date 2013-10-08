@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2013 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  *
  * @author      JA
@@ -404,6 +404,20 @@ class Webservice_RestController extends Pimcore_Controller_Action_Webservice {
                 } else {
                     $object = $this->service->getAssetFileById($id);
                     $light = $this->getParam("light");
+                    $algo = "sha1";
+
+                    $thumbnailConfig = $this->getParam("thumbnail");
+                    if ($thumbnailConfig) {
+                        $checksum = $asset->getThumbnail($thumbnailConfig)->getChecksum($algo);
+                    } else {
+                        $checksum = $asset->getChecksum($algo);
+                    }
+
+                    $object->checksum = array(
+                        "algo" => $algo,
+                        "value" => $checksum
+                    );
+
                     if ($light) {
                         unset($object->data);
                     }
@@ -837,6 +851,89 @@ class Webservice_RestController extends Pimcore_Controller_Action_Webservice {
         $this->encoder->encode(array("success" => true, "data" => $result));
     }
 
+    private function inquire($type) {
+        try {
+            $condense = $this->getParam("condense");
+            $this->checkUserPermission($type . "s");
+            if ($this->isPost()) {
+                $data = file_get_contents("php://input");
+                $idList = explode(',', $data);
+            } else if ($this->getParam("ids")) {
+                $idList = explode(',', $this->getParam("ids"));
+            } else {
+                $idList = array();
+            }
+
+            if ($this->getParam("id")) {
+                $idList[] = $this->getParam("id");
+            }
+
+            $resultData = array();
+
+            foreach ($idList as $id) {
+                $resultData[$id] = 0;
+            }
+
+            if ($type == "object") {
+                $col = "o_id";
+            } else {
+                $col = "id";
+            }
+            $sql = "select " . $col . " from " .$type . "s where " . $col . " IN (" . implode(',', $idList) . ")";
+
+            $result = Pimcore_Resource::get()->query($sql);
+            foreach ($result as $item) {
+                $id = $item[$col];
+                if ($condense) {
+                    unset($resultData[$id]);
+                } else {
+                    $resultData[$id] = 1;
+                }
+            }
+            $this->encoder->encode(array("success" => true, "data" => $resultData));
+        } catch (Exception $e) {
+            $this->encoder->encode(array("success" => false, "msg" => $e->getMessage()));
+        }
+    }
+
+    /** Checks for existence of the given object IDs
+     * GET http://[YOUR-DOMAIN]/webservice/rest/object-inquire?apikey=[API-KEY]
+     * Parameters:
+     *      - id single object ID
+     *      - ids comma separated list of object IDs
+     * Returns:
+     *      - List with true or false for each ID
+     */
+    public function objectInquireAction() {
+        $this->inquire("object");
+    }
+
+    /** Checks for existence of the given asset IDs
+     * GET http://[YOUR-DOMAIN]/webservice/rest/asset-inquire?apikey=[API-KEY]
+     * Parameters:
+     *      - id single asset ID
+     *      - ids comma separated list of asset IDs
+     * Returns:
+     *      - List with true or false for each ID
+     */
+    public function assetInquireAction() {
+        $this->inquire("asset");
+    }
+
+    /** Checks for existence of the given document IDs
+     * GET http://[YOUR-DOMAIN]/webservice/rest/document-inquire?apikey=[API-KEY]
+     * Parameters:
+     *      - id single document ID
+     *      - ids comma separated list of document IDs
+     * Returns:
+     *      - List with true or false for each ID
+     */
+    public function documentInquireAction() {
+        $this->inquire("document");
+    }
+
+
+
     /**
      * Returns a list of all object brick definitions.
      */
@@ -992,7 +1089,7 @@ class Webservice_RestController extends Pimcore_Controller_Action_Webservice {
         $this->checkUserPermission("system_settings");
         $systemSettings = Pimcore_Config::getSystemConfig()->toArray();
         $system = array("currentTime" => time(),
-                        "phpCli" => Pimcore_Tool_Console::getPhpCli(),
+            "phpCli" => Pimcore_Tool_Console::getPhpCli(),
         );
 
         $pimcoreConstants = array(); //only Pimcore_ constants -> others might break the Zend_Encode functionality
@@ -1003,10 +1100,10 @@ class Webservice_RestController extends Pimcore_Controller_Action_Webservice {
         }
 
         $pimcore = array("version" => Pimcore_Version::getVersion(),
-                         "revision" => Pimcore_Version::getRevision(),
-                         "instanceIdentifier" => $systemSettings["general"]["instanceIdentifier"],
-                         "modules" => array(),
-                         "constants" => $pimcoreConstants,
+            "revision" => Pimcore_Version::getRevision(),
+            "instanceIdentifier" => $systemSettings["general"]["instanceIdentifier"],
+            "modules" => array(),
+            "constants" => $pimcoreConstants,
         );
 
 

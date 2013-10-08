@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2012 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -70,6 +70,8 @@ pimcore.object.tags.keyValue = Class.create(pimcore.object.tags.abstract, {
                         if (record.data.type == "translated") {
                             // whoooo, we have to go to the server and ask for a new translation
                             this.translate(record);
+                        } else {
+                            record.set("translated", record.data.value);
                         }
                     }
                 }.bind(this)

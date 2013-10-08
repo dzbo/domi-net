@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Object_Class
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -57,14 +57,14 @@ class Object_Class_Data_Table extends Object_Class_Data {
      *
      * @var string
      */
-    public $queryColumnType = "text";
+    public $queryColumnType = "longtext";
 
     /**
      * Type for the column
      *
      * @var string
      */
-    public $columnType = "text";
+    public $columnType = "longtext";
 
     /**
      * Type for the generated phpdoc

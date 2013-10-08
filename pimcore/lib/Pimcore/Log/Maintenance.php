@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -109,6 +109,9 @@ class Pimcore_Log_Maintenance {
         if(is_array($files)) {
             foreach ($files as $file) {
                 if(filemtime($file) < (time()-(86400*30))) { // we keep the logs for 30 days
+                    unlink($file);
+                } else if (!preg_match("/\.gz$/", $file)) {
+                    gzcompressfile($file);
                     unlink($file);
                 }
             }

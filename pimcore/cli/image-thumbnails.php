@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -101,13 +101,13 @@ for($i=0; $i<(ceil($total/$perLoop)); $i++) {
         foreach ($thumbnails as $thumbnail) {
             if((empty($allowedThumbs) && !$opts->getOption("system")) || in_array($thumbnail, $allowedThumbs)) {
                 echo "generating thumbnail for image: " . $image->getFullpath() . " | " . $image->getId() . " | Thumbnail: " . $thumbnail . " : " . formatBytes(memory_get_usage()) . " \n";
-                $image->getThumbnail($thumbnail);
+                echo "generated thumbnail: " . $image->getThumbnail($thumbnail) . "\n";
             }
         }
 
         if($opts->getOption("system")) {
             echo "generating thumbnail for image: " . $image->getFullpath() . " | " . $image->getId() . " | Thumbnail: System Preview (tree) : " . formatBytes(memory_get_usage()) . " \n";
-            $image->getThumbnail(Asset_Image_Thumbnail_Config::getPreviewConfig());
+            echo "generated thumbnail: " . $image->getThumbnail(Asset_Image_Thumbnail_Config::getPreviewConfig()) . "\n";
         }
     }
     Pimcore::collectGarbage();

@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -23,21 +23,15 @@ class Reports_CustomReportController extends Pimcore_Controller_Action_Admin_Rep
 
     public function treeAction () {
 
-        $dir = Tool_CustomReport_Config::getWorkingDir();
+        $reports = Tool_CustomReport_Config::getReportsList();
 
-        $reports = array();
-        $files = scandir($dir);
-        foreach ($files as $file) {
-            if(strpos($file, ".xml")) {
-                $name = str_replace(".xml", "", $file);
-                $reports[] = array(
-                    "id" => $name,
-                    "text" => $name
-                );
-            }
+        if($this->getParam("portlet")) {
+            $this->_helper->json(array("data" => $reports));
+        } else {
+            $this->_helper->json($reports);
         }
 
-        $this->_helper->json($reports);
+
     }
 
     public function addAction () {
@@ -95,24 +89,27 @@ class Reports_CustomReportController extends Pimcore_Controller_Action_Admin_Rep
 
         $configuration = json_decode($this->getParam("configuration"));
         $configuration = $configuration[0];
-        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
 
         $success = false;
         $columns = null;
         $errorMessage = null;
+
         try {
+
+            $adapter = Tool_CustomReport_Config::getAdapter($configuration);
             $columns = $adapter->getColumns($configuration);
             $success = true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $errorMessage = $e->getMessage();
         }
 
         $this->_helper->json(array(
-            "success" => $success,
-            "columns" => $columns,
-            "errorMessage" => $errorMessage
-        ));
+                                  "success" => $success,
+                                  "columns" => $columns,
+                                  "errorMessage" => $errorMessage
+                             ));
     }
+
 
     public function getReportConfigAction() {
         $dir = Tool_CustomReport_Config::getWorkingDir();
@@ -135,29 +132,52 @@ class Reports_CustomReportController extends Pimcore_Controller_Action_Admin_Rep
         }
 
         $this->_helper->json(array(
-            "success" => true,
-            "reports" => $reports
-        ));
+                                  "success" => true,
+                                  "reports" => $reports
+                             ));
     }
 
     public function dataAction() {
+
         $offset = $this->getParam("start", 0);
         $limit = $this->getParam("limit", 40);
         $sort = $this->getParam("sort");
         $dir = $this->getParam("dir");
-        $filters = ($this->_getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+        $filters = ($this->getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+
+        $drillDownFilters = $this->getParam("drillDownFilters", null);
 
         $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
         $configuration = $config->getDataSourceConfig();
         $configuration = $configuration[0];
-        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
 
-        $result = $adapter->getData($filters, $sort, $dir, $offset, $limit);
+        $adapter = Tool_CustomReport_Config::getAdapter($configuration, $config);
 
+        $result = $adapter->getData($filters, $sort, $dir, $offset, $limit, null, $drillDownFilters, $config);
+
+
+        $this->_helper->json(array(
+                                  "success" => true,
+                                  "data" => $result['data'],
+                                  "total" => $result['total']
+                             ));
+    }
+
+    public function drillDownOptionsAction() {
+
+        $field = $this->getParam("field");
+        $filters = ($this->getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+        $drillDownFilters = $this->getParam("drillDownFilters", null);
+
+        $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
+        $configuration = $config->getDataSourceConfig();
+        $configuration = $configuration[0];
+
+        $adapter = Tool_CustomReport_Config::getAdapter($configuration, $config);
+        $result = $adapter->getAvailableOptions($filters, $field, $drillDownFilters);
         $this->_helper->json(array(
             "success" => true,
             "data" => $result['data'],
-            "total" => $result['total']
         ));
     }
 
@@ -165,19 +185,21 @@ class Reports_CustomReportController extends Pimcore_Controller_Action_Admin_Rep
         $sort = $this->getParam("sort");
         $dir = $this->getParam("dir");
         $filters = ($this->_getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+        $drillDownFilters = $this->getParam("drillDownFilters", null);
 
         $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
+
         $configuration = $config->getDataSourceConfig();
         $configuration = $configuration[0];
-        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
+        $adapter = Tool_CustomReport_Config::getAdapter($configuration, $config);
 
-        $result = $adapter->getData($filters, $sort, $dir, null, null);
+        $result = $adapter->getData($filters, $sort, $dir, null, null, null, $drillDownFilters);
 
         $this->_helper->json(array(
-            "success" => true,
-            "data" => $result['data'],
-            "total" => $result['total']
-        ));
+                                  "success" => true,
+                                  "data" => $result['data'],
+                                  "total" => $result['total']
+                             ));
     }
 
     public function downloadCsvAction() {
@@ -186,13 +208,23 @@ class Reports_CustomReportController extends Pimcore_Controller_Action_Admin_Rep
         $sort = $this->getParam("sort");
         $dir = $this->getParam("dir");
         $filters = ($this->_getParam("filter") ? json_decode($this->getParam("filter"), true) : null);
+        $drillDownFilters = $this->getParam("drillDownFilters", null);
 
         $config = Tool_CustomReport_Config::getByName($this->getParam("name"));
+
+        $columns = $config->getColumnConfiguration();
+        $fields = array();
+        foreach($columns as $column) {
+            if($column['export']) {
+                $fields[] = $column['name'];
+            }
+        }
+
         $configuration = $config->getDataSourceConfig();
         $configuration = $configuration[0];
-        $adapter = new Tool_CustomReport_Adapter_Sql($configuration);
+        $adapter = Tool_CustomReport_Config::getAdapter($configuration, $config);
 
-        $result = $adapter->getData($filters, $sort, $dir, null, null);
+        $result = $adapter->getData($filters, $sort, $dir, null, null, $fields, $drillDownFilters);
 
         $exportFile = PIMCORE_SYSTEM_TEMP_DIRECTORY . "/report-export-" . uniqid() . ".csv";
         @unlink($exportFile);

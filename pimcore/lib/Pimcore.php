@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -53,6 +53,7 @@ class Pimcore {
         $cache = Pimcore_Model_Cache::getInstance();
         Zend_Locale_Data::setCache($cache);
         Zend_Locale::setCache($cache);
+        Zend_Locale_Data::setCache($cache);
         Zend_Db_Table_Abstract::setDefaultMetadataCache($cache);
 
         // load plugins and modules (=core plugins)
@@ -594,7 +595,6 @@ class Pimcore {
         $autoloader->registerNamespace('Services_');
         $autoloader->registerNamespace('HTTP_');
         $autoloader->registerNamespace('Net_');
-        $autoloader->registerNamespace('MIME_');
         $autoloader->registerNamespace('File_');
         $autoloader->registerNamespace('System_');
         $autoloader->registerNamespace('PEAR_');

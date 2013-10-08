@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
@@ -40,11 +40,40 @@ class Admin_ElementController extends Pimcore_Controller_Action_Admin {
         $this->_helper->json($response);
     }
 
+    /**
+     * Returns the element data denoted by the given type and ID or path.
+     */
     public function getSubtypeAction () {
 
-        $id = (int) $this->getParam("id");
+        $idOrPath = trim($this->getParam("id"));
         $type = $this->getParam("type");
-        $el = Element_Service::getElementById($type, $id);
+        if (is_numeric($idOrPath)) {
+            $el = Element_Service::getElementById($type, (int) $idOrPath);
+        } else {
+            if ($type == "document") {
+                $urlParts = parse_url($idOrPath);
+                if($urlParts["path"]) {
+                    $document = Document::getByPath($urlParts["path"]);
+
+                    // search for a page in a site
+                    if(!$document) {
+                        $sitesList = new Site_List();
+                        $sitesObjects = $sitesList->load();
+
+                        foreach ($sitesObjects as $site) {
+                            if ($site->getRootDocument() && in_array($urlParts["host"],$site->getDomains())) {
+                                if($document = Document::getByPath($site->getRootDocument() . $urlParts["path"])) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                $el = $document;
+            } else {
+                $el = Element_Service::getElementByPath($type, $idOrPath);
+            }
+        }
 
         if($el) {
             if($el instanceof Asset || $el instanceof Document) {
@@ -57,7 +86,7 @@ class Admin_ElementController extends Pimcore_Controller_Action_Admin {
 
             $this->_helper->json(array(
                 "subtype" => $subtype,
-                "id" => $id,
+                "id" => $el->getId(),
                 "type" => $type,
                 "success" => true
             ));

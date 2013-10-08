@@ -10,7 +10,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 class Pimcore_View_Helper_PimcoreNavigation extends Zend_View_Helper_Abstract
@@ -92,6 +92,7 @@ class Pimcore_View_Helper_PimcoreNavigation_Controller
         $childs = $parentDocument->getChilds();
         if (is_array($childs)) {
             foreach ($childs as $child) {
+                $classes = "";
 
                 if($child instanceof Document_Hardlink) {
                     $child = Document_Hardlink_Service::wrap($child);
@@ -101,8 +102,18 @@ class Pimcore_View_Helper_PimcoreNavigation_Controller
 
                     $active = false;
 
-                    if (strpos($this->_activeDocument->getRealFullPath(), $child->getRealFullPath() . "/") === 0 || $this->_activeDocument->getRealFullPath() == $child->getRealFullPath()) {
+                    if ($this->_activeDocument->getRealFullPath() == $child->getRealFullPath()) {
                         $active = true;
+                    } else if (strpos($this->_activeDocument->getRealFullPath(), $child->getRealFullPath() . "/") === 0) {
+                      $classes .= " active active-trail";
+                    }
+
+                    // if the child is a link, check if the target is the same as the active document
+                    // if so, mark it as active
+                    if($child instanceof Document_Link) {
+                        if ($this->_activeDocument->getRealFullPath() == $child->getHref()) {
+                            $active = true;
+                        }
                     }
 
                     $path = $child->getFullPath();
@@ -128,12 +139,13 @@ class Pimcore_View_Helper_PimcoreNavigation_Controller
                     }
 
                     if ($active and !$isRoot) {
-                        $page->setClass($page->getClass() . " active");
+                        $classes .= " active";
                     } else if ($active and $isRoot) {
-                        $page->setClass($page->getClass() . " main mainactive");
+                        $classes .= " main mainactive active";
                     } else if ($isRoot) {
-                        $page->setClass($page->getClass() . " main");
+                       $classes .= " main";
                     }
+                    $page->setClass($page->getClass() . $classes);
 
                     if ($child->hasChilds()) {
                         $childPages = $this->buildNextLevel($child, $page, false);

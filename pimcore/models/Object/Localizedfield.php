@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Object
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -214,7 +214,7 @@ class Object_Localizedfield extends Pimcore_Model_Abstract {
             foreach (Pimcore_Tool::getFallbackLanguagesFor($language) as $l) {
                 if($this->languageExists($l)) {
                     if(array_key_exists($name, $this->items[$l])) {
-                        $data = $this->items[$l][$name];
+                        $data = $this->getLocalizedValue($name, $l);
                     }
                 }
             }

@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Document
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -60,8 +60,14 @@ class Document_Service extends Element_Service {
 
         // add the view script path from the website module to the view, because otherwise it's not possible to call
         // this method out of other modules to render documents, eg. sending e-mails out of an plugin with Pimcore_Mail
-        $view->addScriptPath(PIMCORE_FRONTEND_MODULE . "/views/layouts");
-        $view->addScriptPath(PIMCORE_FRONTEND_MODULE . "/views/scripts");
+        $moduleDirectory = Zend_Controller_Front::getInstance()->getModuleDirectory($document->getModule());
+        if (!empty($moduleDirectory)) {
+            $view->addScriptPath($moduleDirectory . "/views/layouts");
+            $view->addScriptPath($moduleDirectory . "/views/scripts");
+        } else {
+            $view->addScriptPath(PIMCORE_FRONTEND_MODULE . "/views/layouts");
+            $view->addScriptPath(PIMCORE_FRONTEND_MODULE . "/views/scripts");
+        }
 
         $documentBackup = null;
         if($view->document) {

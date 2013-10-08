@@ -8,12 +8,15 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
 pimcore.registerNS("pimcore.report.custom.report");
 pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
+
+    drillDownFilters: {},
+    drillDownStores: [],
 
     matchType: function (type) {
         var types = ["global"];
@@ -32,12 +35,15 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
     },
 
     initGrid: function (data) {
+        this.drillDownFilters = {};
+        this.drillDownStores = [];
 
         var storeFields = [];
         var gridColums = [];
         var colConfig;
-        var grodColConfig = {};
+        var gridColConfig = {};
         var filters = [];
+        var drillDownFilterDefinitions = [];
         this.columnLabels = {};
 
         for(var f=0; f<data.columnConfiguration.length; f++) {
@@ -46,7 +52,7 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
 
             this.columnLabels[colConfig["name"]] = colConfig["label"] ? ts(colConfig["label"]) : ts(colConfig["name"]);
 
-            grodColConfig = {
+            gridColConfig = {
                 header: colConfig["label"] ? ts(colConfig["label"]) : ts(colConfig["name"]),
                 hidden: !colConfig["display"],
                 sortable: colConfig["order"],
@@ -55,7 +61,7 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
             };
 
             if(colConfig["width"]) {
-                grodColConfig["width"] = intval(colConfig["width"]);
+                gridColConfig["width"] = intval(colConfig["width"]);
             }
 
             if(colConfig["filter"]) {
@@ -64,10 +70,18 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
                     type: colConfig["filter"]
                 });
 
-                grodColConfig["filterable"] = true;
+                gridColConfig["filterable"] = true;
             }
 
-            gridColums.push(grodColConfig);
+
+            if(colConfig["filter_drilldown"] == 'only_filter' || colConfig["filter_drilldown"] == 'filter_and_show') {
+                drillDownFilterDefinitions.push(colConfig);
+            }
+
+            if(colConfig["filter_drilldown"] != 'only_filter') {
+                gridColums.push(gridColConfig);
+            }
+
         }
 
         this.gridFilters = new Ext.ux.grid.GridFilters({
@@ -94,6 +108,20 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
                                 filter: this.gridFilters.buildQuery(filterData).filter
                             }
                         });
+
+                        for(var j = 0; j < this.drillDownStores.length; j++) {
+                            if(this.drillDownStores[j].notReload) {
+                                //to prevent reopening of combo box
+                                this.drillDownStores[j].notReload = false;
+                            } else {
+                                this.drillDownStores[j].load({
+                                    params: {
+                                        filter: this.gridFilters.buildQuery(filterData).filter
+                                    }
+                                });
+                            }
+                        }
+
                     }
 
                 }.bind(this)
@@ -137,6 +165,40 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
             }
         }));
 
+        var topBar = this.buildTopBar(drillDownFilterDefinitions);
+
+        topBar.push("->");
+        topBar.push({
+            xtype: "button",
+            text: t("export_csv"),
+            iconCls: "pimcore_icon_export",
+            handler: function () {
+                var query = "";
+                var filterData = this.gridFilters.getFilterData();
+                if(filterData.length > 0) {
+                    query = "filter=" + encodeURIComponent(this.gridFilters.buildQuery(filterData).filter);
+                } else {
+                    query = "filter=";
+                }
+
+                query += "&name=" + this.config.name;
+
+                if(this.drillDownFilters) {
+                    var fieldnames = Object.getOwnPropertyNames(this.drillDownFilters);
+                    for(var j = 0; j < fieldnames.length; j++) {
+                        if(this.drillDownFilters[fieldnames[j]] !== null) {
+                            query += "&" + 'drillDownFilters[' + fieldnames[j] + ']='
+                                + this.drillDownFilters[fieldnames[j]];
+                        }
+                    }
+                }
+
+                var downloadUrl = "/admin/reports/custom-report/download-csv?" + query;
+                pimcore.helpers.download(downloadUrl);
+            }.bind(this)
+        });
+
+
         this.grid = new Ext.grid.GridPanel({
             region: "center",
             store: this.store,
@@ -149,28 +211,67 @@ pimcore.report.custom.report = Class.create(pimcore.report.abstract, {
             viewConfig: {
                 forceFit: false
             },
-            tbar: ["->",{
-                xtype: "button",
-                text: t("export_csv"),
-                iconCls: "pimcore_icon_export",
-                handler: function () {
-                    var query = "";
-                    var filterData = this.gridFilters.getFilterData();
-                    if(filterData.length > 0) {
-                        query = "filter=" + encodeURIComponent(this.gridFilters.buildQuery(filterData).filter);
-                    } else {
-                        query = "filter="
-                    }
-
-                    query += "&name=" + this.config.name;
-
-                    var downloadUrl = "/admin/reports/custom-report/download-csv?" + query;
-                    pimcore.helpers.download(downloadUrl);
-                }.bind(this)
-            }]
+            tbar: topBar
         });
 
         return this.grid;
+    },
+
+    buildTopBar: function(drillDownFilterDefinitions) {
+        var drillDownFilterComboboxes = [];
+
+        for(var i = 0; i < drillDownFilterDefinitions.length; i++) {
+            drillDownFilterComboboxes.push({
+                xtype: 'label',
+                text: drillDownFilterDefinitions[i]["label"] ? ts(drillDownFilterDefinitions[i]["label"])
+                                                    : ts(drillDownFilterDefinitions[i]["name"]),
+                style: 'padding-right: 5px'
+            });
+
+            var drillDownStore = new Ext.data.JsonStore({
+                url: '/admin/reports/custom-report/drill-down-options',
+                root: 'data',
+                baseParams: {
+                    name: this.config["name"],
+                    field: drillDownFilterDefinitions[i]["name"]
+                },
+                fields: ['value']
+            });
+            this.drillDownStores.push(drillDownStore);
+
+            drillDownFilterComboboxes.push({
+                xtype: 'combo',
+                forceSelection: true,
+                triggerAction: 'all',
+                store: drillDownStore,
+                listeners: {
+                    select: function(fieldname, combo, record, index) {
+                        var value = combo.getValue();
+                        this.drillDownFilters[fieldname] = value;
+
+                        this.store.setBaseParam('drillDownFilters[' + fieldname + ']', value);
+                        if(this.chartStore) {
+                            this.chartStore.setBaseParam('drillDownFilters[' + fieldname + ']', value);
+                        }
+                        for(var j = 0; j < this.drillDownStores.length; j++) {
+                            if(this.drillDownStores[j] != combo.getStore()) {
+                                this.drillDownStores[j].setBaseParam('drillDownFilters[' + fieldname + ']', value);
+                            } else {
+                                this.drillDownStores[j].notReload = true;
+                            }
+                        }
+
+                        this.store.reload();
+                    }.bind(this, drillDownFilterDefinitions[i]["name"])
+                },
+                valueField: 'value',
+                displayField: 'value'
+            });
+            if(i < drillDownFilterDefinitions.length-1) {
+                drillDownFilterComboboxes.push('-');
+            }
+        }
+        return drillDownFilterComboboxes;
     },
 
     chartColors: [

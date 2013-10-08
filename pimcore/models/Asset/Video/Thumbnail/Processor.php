@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Asset
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
@@ -239,7 +239,10 @@ class Asset_Video_Thumbnail_Processor {
         $instance->setProcessId($processId);
 
         if(is_file($instance->getJobFile())) {
-            $instance = Pimcore_Tool_Serialize::unserialize(file_get_contents($instance->getJobFile()));
+            $i = Pimcore_Tool_Serialize::unserialize(file_get_contents($instance->getJobFile()));
+            if($i instanceof Asset_Video_Thumbnail_Processor) {
+                $instance = $i;
+            }
         }
 
         return $instance->getStatus();

@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -199,7 +199,7 @@ class Admin_PageController extends Pimcore_Controller_Action_Admin_Document {
         if($this->getParam("id")) {
 
             $doc = Document::getById($this->getParam("id"));
-            $url = Pimcore_Tool::getHostUrl() . $doc->getRealFullPath();
+            $url = Pimcore_Tool::getHostUrl() . $doc->getRealFullPath() . "?pimcore_preview=true";
 
             $config = Pimcore_Config::getSystemConfig();
             if ($config->general->http_auth) {

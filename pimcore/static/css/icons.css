@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -847,6 +847,10 @@
 
 .pimcore_icon_portlet_modified_assets {
     background: url(/pimcore/static/img/icon/brick_edit.png) left center no-repeat !important;
+}
+
+.pimcore_icon_portlet_custom_reports {
+    background: url(/pimcore/static/img/icon/database.png) left center no-repeat !important;
 }
 
 

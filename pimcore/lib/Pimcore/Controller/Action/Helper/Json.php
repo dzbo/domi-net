@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -44,19 +44,23 @@ class Pimcore_Controller_Action_Helper_Json extends Zend_Controller_Action_Helpe
             }
         } else if (is_object($element)) {
 
+            $clone = clone $element; // do not modify the original object
+
             if(in_array($element, $this->processedObjects, true)) {
                 return '"* RECURSION (' . get_class($element) . ') *"';
             }
 
             $this->processedObjects[] = $element;
 
-            $propCollection = get_object_vars($element);
+            $propCollection = get_object_vars($clone);
 
             foreach ($propCollection as $name => $propValue) {
-                $element->$name = $this->filterCycles($propValue);
+                $clone->$name = $this->filterCycles($propValue);
             }
 
             array_splice($this->processedObjects, array_search($element, $this->processedObjects, true), 1);
+
+            return $clone;
         }
 
         return $element;

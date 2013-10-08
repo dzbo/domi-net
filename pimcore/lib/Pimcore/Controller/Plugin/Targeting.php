@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -175,6 +175,7 @@ class Pimcore_Controller_Plugin_Targeting extends Zend_Controller_Plugin_Abstrac
                 $code .= 'pimcore["targeting"]["dataPush"] = ' . Zend_Json::encode($dataPush) . ';';
                 $code .= 'pimcore["targeting"]["targets"] = ' . Zend_Json::encode($targets) . ';';
                 $code .= 'pimcore["targeting"]["personas"] = ' . Zend_Json::encode($personas) . ';';
+                $code .= 'pimcore["targeting"]["requestInfo"] = ' . Zend_Json::encode(array("method" => strtolower($this->getRequest()->getMethod()))) . ';';
             $code .= '</script>';
             $code .= '<script type="text/javascript" src="/pimcore/static/js/frontend/targeting.js"></script>';
             $code .= "\n";

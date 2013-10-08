@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -492,6 +492,9 @@ class Pimcore_Tool {
         } else {
             $ip = $_SERVER['REMOTE_ADDR'];
         }
+
+        $ips = explode(",", $ip);
+        $ip = trim(array_pop($ips));
 
         return $ip;
     }

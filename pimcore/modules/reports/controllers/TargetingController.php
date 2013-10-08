@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -35,7 +35,8 @@ class Reports_TargetingController extends Pimcore_Controller_Action_Admin {
         foreach($list->load() as $target) {
             $targets[] = array(
                 "id" => $target->getId(),
-                "text" => $target->getName()
+                "text" => $target->getName(),
+                "qtip" => $target->getId()
             );
         }
 
@@ -122,7 +123,8 @@ class Reports_TargetingController extends Pimcore_Controller_Action_Admin {
         foreach($list->load() as $persona) {
             $personas[] = array(
                 "id" => $persona->getId(),
-                "text" => $persona->getName()
+                "text" => $persona->getName(),
+                "qtip" => $persona->getId()
             );
         }
 

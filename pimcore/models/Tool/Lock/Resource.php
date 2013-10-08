@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Tool
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -66,7 +66,7 @@ class Tool_Lock_Resource extends Pimcore_Model_Resource_Abstract {
     }
 
     public function release ($key) {
-        $this->db->delete("locks", "id = '" . $key . "'");
+        $this->db->delete("locks", "id = " . $this->db->quote($key));
     }
 
     public function lock ($key) {

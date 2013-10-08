@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -32,12 +32,12 @@ pimcore.report.custom.item = Class.create({
             text: t("save"),
             iconCls: "pimcore_icon_apply",
             handler: this.save.bind(this)
-        }); 
+        });
 
         this.columnStore = new Ext.data.JsonStore({
             autoDestroy: false,
             data: [],
-            fields: ["name", "filter", "display", "export", "order", "width", "label"]
+            fields: ["name", "filter", "filter_drilldown", "display", "export", "order", "width", "label"]
         });
 
         var checkDisplay = new Ext.grid.CheckColumn({
@@ -67,11 +67,24 @@ pimcore.report.custom.item = Class.create({
                 checkOrder,
                 {header: t("filter_type"), width:100, sortable: false, dataIndex: 'filter', editable: true, editor: new Ext.form.ComboBox({
                     store: [
-                        //["date", t("date")],
                         ["", t("empty")],
                         ["string", t("text")],
-                        ["boolean", t("bool")],
-                        ["numeric", t("numeric")]
+                        ["numeric", t("numeric")],
+//                        ["date", t("date")],
+                        ["boolean", t("bool")]
+                    ],
+                    mode: "local",
+                    typeAhead: false,
+                    editable: false,
+                    forceSelection: true,
+                    triggerAction: "all"
+                })},
+                {header: t("custom_report_filter_drilldown"), width:100, sortable: false, dataIndex: 'filter_drilldown', editable: true, editor: new Ext.form.ComboBox({
+                    store: [
+                        //["date", t("date")],
+                        ["", t("empty")],
+                        ["only_filter", t("custom_report_only_filter")],
+                        ["filter_and_show", t("custom_report_filter_and_show")]
                     ],
                     mode: "local",
                     typeAhead: false,
@@ -462,7 +475,13 @@ pimcore.report.custom.item = Class.create({
         if(this.currentElementCount < 1) {
             classMenu.push({
                 text: t("custom_report_adapter_sql"),
-                handler: this.addSourceDefinition.bind(this, null),
+                handler: this.addSourceDefinition.bind(this, {type:'sql'}),
+                iconCls: "pimcore_icon_objectbricks"
+            });
+
+            classMenu.push({
+                text: t("custom_report_adapter_analytics"),
+                handler: this.addSourceDefinition.bind(this, {type:'analytics'}),
                 iconCls: "pimcore_icon_objectbricks"
             });
         }
@@ -507,7 +526,11 @@ pimcore.report.custom.item = Class.create({
 
         var key = this.currentElements.length;
 
-        var adapter = new pimcore.report.custom.definition.sql(sourceDefinitionData, key, this.getDeleteControl(t("custom_report_adapter_sql"), key), this.getColumnSettings.bind(this));
+        sourceDefinitionData.type = sourceDefinitionData.type ? sourceDefinitionData.type : 'sql';
+
+        var adapter = new pimcore.report.custom.definition[sourceDefinitionData.type](sourceDefinitionData, key, this.getDeleteControl(t("custom_report_adapter_"+sourceDefinitionData.type), key), this.getColumnSettings.bind(this));
+
+
 
         this.currentElements.push({key: key, adapter: adapter});
         this.currentElementCount++;
@@ -574,6 +597,7 @@ pimcore.report.custom.item = Class.create({
                                 insertData["export"] = cc[o]["export"];
                                 insertData["order"] = cc[o]["order"];
                                 insertData["filter"] = cc[o]["filter"];
+                                insertData["filter_drilldown"] = cc[o]["filter_drilldown"];
                                 insertData["width"] = cc[o]["width"];
                                 insertData["label"] = cc[o]["label"];
                                 break;
@@ -609,6 +633,7 @@ pimcore.report.custom.item = Class.create({
                 dataSourceConfig.push(this.currentElements[i].adapter.getValues());
             }
         }
+
         allValues["dataSourceConfig"] = dataSourceConfig;
         allValues["sql"] = "";
 

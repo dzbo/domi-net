@@ -8,13 +8,73 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
 /*global localStorage */
 pimcore.registerNS("pimcore.helpers.x");
 
+
+pimcore.helpers.registerKeyBindings = function (bindEl, ExtJS) {
+
+    if(!ExtJS) {
+        ExtJS = Ext;
+    }
+
+    // handler for STRG+S (Save&Publish)
+    var mapCtrlS = new ExtJS.KeyMap(bindEl, {
+        key:"s",
+        fn: top.pimcore.helpers.handleCtrlS,
+        ctrl:true,
+        alt:false,
+        shift:false,
+        stopEvent:true
+    });
+
+    // handler for F5
+    var mapF5 = new ExtJS.KeyMap(bindEl, {
+        key:[116],
+        fn: top.pimcore.helpers.handleF5,
+        stopEvent:true
+    });
+
+    var openAssetById = new ExtJS.KeyMap(bindEl, {
+        key:"a",
+        fn: top.pimcore.helpers.openElementByIdDialog.bind(this, "asset"),
+        ctrl:true,
+        alt:false,
+        shift:true,
+        stopEvent:true
+    });
+
+    var openObjectById = new ExtJS.KeyMap(bindEl, {
+        key:"o",
+        fn: top.pimcore.helpers.openElementByIdDialog.bind(this, "object"),
+        ctrl:true,
+        alt:false,
+        shift:true,
+        stopEvent:true
+    });
+
+    var openDocumentById = new ExtJS.KeyMap(bindEl, {
+        key:"d",
+        fn: top.pimcore.helpers.openElementByIdDialog.bind(this, "document"),
+        ctrl:true,
+        alt:false,
+        shift:true,
+        stopEvent:true
+    });
+
+    var openDocumentByPath = new ExtJS.KeyMap(bindEl, {
+        key:"f",
+        fn: top.pimcore.helpers.openElementByIdDialog.bind(this, "document"),
+        ctrl:true,
+        alt:false,
+        shift:true,
+        stopEvent:true
+    });
+};
 
 pimcore.helpers.openAsset = function (id, type, ignoreForHistory) {
 
@@ -1188,23 +1248,27 @@ pimcore.helpers.openElementByIdDialog = function (type) {
         });
 };
 
+pimcore.helpers.openDocumentByPath = function (path) {
+    Ext.Ajax.request({
+        url: "/admin/document/open-by-url/",
+        params: {
+            url: path
+        },
+        success: function (response) {
+            var res = Ext.decode(response.responseText);
+            if(res.success) {
+                pimcore.helpers.openDocument(res.id, res.type);
+            } else {
+                Ext.MessageBox.alert(t("error"), t("no_matching_document_found_for") + ": " + value);
+            }
+        }.bind(this)
+    });
+};
+
 pimcore.helpers.openDocumentByPathDialog = function () {
     Ext.MessageBox.prompt(t("open_document_by_url"), t("path_or_url_incl_http"), function (button, value, object) {
         if (button == "ok") {
-            Ext.Ajax.request({
-                url: "/admin/document/open-by-url/",
-                params: {
-                    url: value
-                },
-                success: function (response) {
-                    var res = Ext.decode(response.responseText);
-                    if(res.success) {
-                        pimcore.helpers.openDocument(res.id, res.type);
-                    } else {
-                        Ext.MessageBox.alert(t("error"), t("no_matching_document_found_for") + ": " + value);
-                    }
-                }.bind(this)
-            });
+            pimcore.helpers.openDocumentByPath(value);
         }
     });
 };
@@ -1315,6 +1379,7 @@ pimcore.helpers.treeNodeThumbnailPreview = function (tree, parent, node, index) 
                 }
 
                 var imageHtml = "";
+                var imagePreload = [];
 
                 var uriPrefix = window.location.protocol + "//" + window.location.host;
 
@@ -1322,15 +1387,14 @@ pimcore.helpers.treeNodeThumbnailPreview = function (tree, parent, node, index) 
                 if(thumbnails && thumbnails.length) {
                     imageHtml += '<div class="thumbnails">';
                     for(var i=0; i<thumbnails.length; i++) {
-                        imageHtml += '<div class="small" ' +
-                            'style="background-image:url(' + uriPrefix + thumbnails[i] + ')"></div>';
+                        imageHtml += '<div class="thumb small"><img src="' + uriPrefix + thumbnails[i] + '" onload="this.parentNode.className += \' complete\';" /></div>';
                     }
                     imageHtml += '</div>';
                 }
 
                 var thumbnail = node.attributes.thumbnail;
                 if(thumbnail) {
-                    imageHtml = '<img src="' + uriPrefix + thumbnail + '" />';
+                    imageHtml = '<div class="thumb big"><img src="' + uriPrefix + thumbnail + '" onload="this.parentNode.className += \' complete\';" /></div>';
                 }
 
                 if(imageHtml) {
@@ -1372,8 +1436,18 @@ pimcore.helpers.treeNodeThumbnailPreview = function (tree, parent, node, index) 
                     iframe.setAttribute("marginwidth", "0");
                     iframe.setAttribute("style", "width: 100%; height: 2500px;");
 
-                    imageHtml += '<link rel="stylesheet" type="text/css" ' +
-                        'href="' + uriPrefix + '/pimcore/static/css/tree-preview-frame.css" />';
+                    imageHtml =
+                        '<style type="text/css">' +
+                            'body { margin:0; padding: 0; } ' +
+                            '.thumbnails { width: 410px; } ' +
+                            '.thumb { border: 1px solid #999; border-radius: 5px; background: url(' + uriPrefix + '/pimcore/static/img/loading.gif) no-repeat center center; box-sizing: border-box; -webkit-box-sizing: border-box; -moz-box-sizing:border-box; } ' +
+                            '.big { min-height: 300px; } ' +
+                            '.complete { border:none; border-radius: 0;}' +
+                            '.small { width: 130px; height: 130px; float: left; overflow: hidden; margin: 0 5px 5px 0; } ' +
+                            '.small.complete img { min-width: 100%; max-height: 100%; } ' +
+                            '/* firefox fix: remove loading/broken image icon */ @-moz-document url-prefix() { img:-moz-loading { visibility: hidden; } img:-moz-broken { -moz-force-broken-image-icon: 0;}} ' +
+                        '</style>' +
+                        imageHtml;
 
                     iframe.onload = function () {
                         this.contentWindow.document.body.innerHTML = imageHtml;

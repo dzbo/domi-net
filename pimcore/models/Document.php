@@ -11,7 +11,7 @@
  *
  * @category   Pimcore
  * @package    Document
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  *
  */
@@ -283,7 +283,7 @@ class Document extends Element_Abstract {
      * @param array $data
      * @return Document
      */
-    public static function create($parentId, $data = array()) {
+    public static function create($parentId, $data = array(), $save = true) {
 
         $document = new static();
         $document->setParentId($parentId);
@@ -291,7 +291,10 @@ class Document extends Element_Abstract {
         foreach ($data as $key => $value) {
             $document->setValue($key, $value);
         }
-        $document->save();
+
+        if($save) {
+            $document->save();
+        }
 
         return $document;
     }

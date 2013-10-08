@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -564,12 +564,14 @@ class Pimcore_Mail extends Zend_Mail
 
         $this->setSubject($this->getSubjectRendered());
 
-        if($this->getBodyHtmlRendered()){
-            $this->setBodyHtml($this->getBodyHtmlRendered());
+        $bodyHtmlRendered = $this->getBodyHtmlRendered();
+        if($bodyHtmlRendered){
+            $this->setBodyHtml($bodyHtmlRendered);
         }
 
-        if($this->getBodyTextRendered()){
-            $this->setBodyText($this->getBodyTextRendered());
+        $bodyTextRendered = $this->getBodyTextRendered();
+        if($bodyTextRendered){
+            $this->setBodyText($bodyTextRendered);
         }
 
         if($this->ignoreDebugMode == false){

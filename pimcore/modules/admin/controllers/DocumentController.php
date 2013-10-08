@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -149,7 +149,10 @@ class Admin_DocumentController extends Pimcore_Controller_Action_Admin {
 
                 switch ($this->getParam("type")) {
                     case "page":
-                        $document = Document_Page::create($this->getParam("parentId"), $createValues);
+                        $document = Document_Page::create($this->getParam("parentId"), $createValues, false);
+                        $document->setTitle($this->getParam('title', null));
+                        $document->setProperty("navigation_name","text",$this->getParam('name', null),false);
+                        $document->save();
                         $success = true;
                         break;
                     case "snippet":
@@ -1132,40 +1135,6 @@ class Admin_DocumentController extends Pimcore_Controller_Action_Admin {
         $this->_helper->json($documents);
     }
 
-
-    public function openByUrlAction () {
-
-        $urlParts = parse_url($this->getParam("url"));
-        if($urlParts["path"]) {
-            $document = Document::getByPath($urlParts["path"]);
-
-            // search for a page in a site
-            if(!$document) {
-                $sitesList = new Site_List();
-                $sitesObjects = $sitesList->load();
-
-                foreach ($sitesObjects as $site) {
-                    if ($site->getRootDocument() && in_array($urlParts["host"],$site->getDomains())) {
-                        if($document = Document::getByPath($site->getRootDocument() . $urlParts["path"])) {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if($document) {
-                $this->_helper->json(array(
-                    "success" => true,
-                    "id" => $document->getId(),
-                    "type" => $document->getType()
-                ));
-            }
-        }
-
-        $this->_helper->json(array(
-            "success" => false
-        ));
-    }
 
     public function convertAction() {
 

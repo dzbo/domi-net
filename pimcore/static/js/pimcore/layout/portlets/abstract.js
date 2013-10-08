@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -35,12 +35,15 @@ pimcore.layout.portlets.abstract = Class.create({
 
         Ext.Ajax.request({
             url: "/admin/portal/remove-widget",
-            params: {type: this.getType()}
+            params: {
+                key: this.portal.key,
+                id: this.layout.portletId
+            }
         });
 
         // remove from portal        
         for (var i = 0; i < this.portal.activePortlets.length; i++) {
-            if (this.portal.activePortlets[i] == this.getType()) {
+            if (this.portal.activePortlets[i] == this.layout.portletId) {
                 delete this.portal.activePortlets[i];
                 break;
             }
@@ -51,6 +54,10 @@ pimcore.layout.portlets.abstract = Class.create({
 
     setPortal: function (portal) {
         this.portal = portal;
+    },
+
+    setConfig: function (config) {
+        this.config = config;
     }
 
 });

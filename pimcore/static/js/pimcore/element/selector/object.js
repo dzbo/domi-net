@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -37,7 +37,10 @@ pimcore.element.selector.object = Class.create(pimcore.element.selector.abstract
                         if (key.getKey() == key.ENTER) {
                             this.search();
                         }
-                    }.bind(this)
+                    }.bind(this),
+                    afterrender: function () {
+                        this.focus(true,500);
+                    }
                 }
             }, new Ext.Button({
                 handler: function () {

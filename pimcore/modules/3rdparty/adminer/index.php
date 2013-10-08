@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license dsf sdaf asdf asdf
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -19,6 +19,9 @@ error_reporting(E_ERROR);
 $workingDirectory = getcwd();
 include("../../../cli/startup.php");
 chdir($workingDirectory);
+
+// start global session an keep it open (this is needed for the CSRF protections from adminer)
+Pimcore_Tool_Session::get();
 
 // only for logged in users
 $user = Pimcore_Tool_Authentication::authenticateSession();

@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -391,7 +391,7 @@ pimcore.asset.tree = Class.create({
             }));
         }
 
-        if (this.id != 1) {
+        if (this.id != 1 && this.attributes.permissions.view) {
             menu.add(new Ext.menu.Item({
                 text: t('copy'),
                 iconCls: "pimcore_icon_copy",
@@ -400,7 +400,7 @@ pimcore.asset.tree = Class.create({
         }
 
         //cut
-        if (this.id != 1 && !this.attributes.locked) {
+        if (this.id != 1 && !this.attributes.locked && this.attributes.permissions.rename) {
             menu.add(new Ext.menu.Item({
                 text: t('cut'),
                 iconCls: "pimcore_icon_cut",

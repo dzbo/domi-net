@@ -8,7 +8,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -316,16 +316,23 @@ pimcore.settings.redirects = Class.create({
                 },
 
                 onNodeOver : function(target, dd, e, data) {
-                    return Ext.dd.DropZone.prototype.dropAllowed;
+                    console.log(data.node.attributes.type);
+                    if(in_array(data.node.attributes.type,["page","link","hardlink"])) {
+                        return Ext.dd.DropZone.prototype.dropAllowed;
+                    } else {
+                        return Ext.dd.DropZone.prototype.dropNotAllowed;
+                    }
                 },
 
                 onNodeDrop : function(myRowIndex, target, dd, e, data) {
-                    var rec = this.grid.getStore().getAt(myRowIndex);
-                    rec.set("target", data.node.attributes.path);
+                    if(in_array(data.node.attributes.type,["page","link","hardlink"])) {
+                        var rec = this.grid.getStore().getAt(myRowIndex);
+                        rec.set("target", data.node.attributes.path);
+                        this.updateRows();
+                        return true;
+                    }
+                    return false;
 
-                    this.updateRows();
-
-                    return true;
                 }.bind(this, i)
             });
         }

@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
 
@@ -353,6 +353,13 @@ class Search_Backend_Data extends Pimcore_Model_Abstract {
             }
         } else if($element instanceof Asset) {
             $this->data = $element->getFilename();
+
+            if($element instanceof Asset_Document && Pimcore_Document::isAvailable()) {
+                if(Pimcore_Document::isFileTypeSupported($element->getFilename())) {
+                    $this->data .= " " . $element->getText();
+                }
+            }
+
             $this->published = true;
         } else if ($element instanceof Object_Abstract){
             if ($element instanceof Object_Concrete) {

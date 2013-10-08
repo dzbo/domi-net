@@ -9,7 +9,7 @@
  * It is also available through the world-wide-web at this URL:
  * http://www.pimcore.org/license
  *
- * @copyright  Copyright (c) 2009-2010 elements.at New Media Solutions GmbH (http://www.elements.at)
+ * @copyright  Copyright (c) 2009-2013 pimcore GmbH (http://www.pimcore.org)
  * @license    http://www.pimcore.org/license     New BSD License
  */
  
@@ -99,39 +99,11 @@ class Pimcore_Document_Adapter_LibreOffice extends Pimcore_Document_Adapter_Ghos
         // first we have to create a pdf out of the document (if it isn't already one), so that we can pass it to ghostscript
         // unfortunately there isn't an other way at the moment
         if(!preg_match("/\.?pdf$/", $path)) {
-            if(!parent::isFileTypeSupported($this->path)) {
-                $pdfFile = PIMCORE_TEMPORARY_DIRECTORY . "/document_" . md5($path . filemtime($path)) . "__libreoffice.pdf";
-                $lockKey = "soffice";
-
-                if(!file_exists($pdfFile)) {
-
-                    Tool_Lock::acquire($lockKey); // avoid parallel conversions of the same document
-
-                    // a list of all available filters is here:
-                    // http://cgit.freedesktop.org/libreoffice/core/tree/filter/source/config/fragments/filters
-                    $out = Pimcore_Tool_Console::exec(self::getLibreOfficeCli() . " --headless --convert-to pdf:writer_web_pdf_Export --outdir " . PIMCORE_TEMPORARY_DIRECTORY . " " . $path);
-
-                    Logger::debug("LibreOffice Output was: " . $out);
-
-                    $tmpName = PIMCORE_TEMPORARY_DIRECTORY . "/" . preg_replace("/\." . Pimcore_File::getFileExtension($path) . "$/", ".pdf",basename($path));
-                    if(file_exists($tmpName)) {
-                        rename($tmpName, $pdfFile);
-                        $this->path = $pdfFile;
-                    }
-
-                    Tool_Lock::release($lockKey);
-                } else {
-                    $this->path = $pdfFile;
-                }
+            if(!parent::isFileTypeSupported($path)) {
+                $this->path = $this->getPdf($path);
             }
         } else {
             $this->path = $path;
-        }
-
-        if(!file_exists($this->path)) {
-            $message = "Couldn't load convert document to PDF: " . $path;
-            Logger::error($message);
-            throw new \Exception($message);
         }
 
         parent::load($this->path);
@@ -139,4 +111,78 @@ class Pimcore_Document_Adapter_LibreOffice extends Pimcore_Document_Adapter_Ghos
         return $this;
     }
 
+    public function getPdf($path = null) {
+
+        $pdfPath = null;
+        if(!$path && $this->path) {
+            $path = $this->path;
+        }
+
+        try {
+            // if the document is already an PDF, delegate the call directly to parent::getPdf() (Ghostscript)
+            $pdfPath = parent::getPdf($path);
+            return $pdfPath;
+        } catch (\Exception $e) {
+            // nothing to do, delegate to libreoffice
+        }
+
+        $pdfFile = PIMCORE_TEMPORARY_DIRECTORY . "/document_" . md5($path . filemtime($path)) . "__libreoffice.pdf";
+        $lockKey = "soffice";
+
+        if(!file_exists($pdfFile)) {
+
+            Tool_Lock::acquire($lockKey); // avoid parallel conversions of the same document
+
+            // a list of all available filters is here:
+            // http://cgit.freedesktop.org/libreoffice/core/tree/filter/source/config/fragments/filters
+            $cmd = self::getLibreOfficeCli() . " --headless --convert-to pdf:writer_web_pdf_Export --outdir " . PIMCORE_TEMPORARY_DIRECTORY . " " . $path;
+            $out = Pimcore_Tool_Console::exec($cmd);
+
+            Logger::debug("LibreOffice Output was: " . $out);
+
+            $tmpName = PIMCORE_TEMPORARY_DIRECTORY . "/" . preg_replace("/\." . Pimcore_File::getFileExtension($path) . "$/", ".pdf",basename($path));
+            if(file_exists($tmpName)) {
+                rename($tmpName, $pdfFile);
+                $pdfPath = $pdfFile;
+            } else {
+                $message = "Couldn't convert document to PDF: " . $path . " with the command: '" . $cmd . "'";
+                Logger::error($message);
+                throw new \Exception($message);
+            }
+
+            Tool_Lock::release($lockKey);
+        } else {
+            $pdfPath = $pdfFile;
+        }
+
+        return $pdfPath;
+    }
+
+    public function getText($page = null, $path = null) {
+
+        $path = $path ? $path : $this->path;
+
+        if($page || parent::isFileTypeSupported($path)) {
+            // for per page extraction we have to convert the document to PDF and extract the text via ghostscript
+            return parent::getText($page, $this->getPdf($path));
+        } else {
+            // if we want to get the text of the whole document, we can use libreoffices text export feature
+            $cmd = self::getLibreOfficeCli() . " --headless --convert-to txt:Text --outdir " . PIMCORE_TEMPORARY_DIRECTORY . " " . $path;
+            $out = Pimcore_Tool_Console::exec($cmd);
+
+            Logger::debug("LibreOffice Output was: " . $out);
+
+            $tmpName = PIMCORE_TEMPORARY_DIRECTORY . "/" . preg_replace("/\." . Pimcore_File::getFileExtension($path) . "$/", ".txt",basename($path));
+            if(file_exists($tmpName)) {
+                $text = file_get_contents($tmpName);
+                $text = Pimcore_Tool_Text::convertToUTF8($text);
+                unlink($tmpName);
+                return $text;
+            } else {
+                $message = "Couldn't convert document to PDF: " . $path . " with the command: '" . $cmd . "'";
+                Logger::error($message);
+                throw new \Exception($message);
+            }
+        }
+    }
 }
